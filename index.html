@@ -439,7 +439,7 @@
             
             let pureText = text.split(/[/,;|\n]+/)[0].trim();
             pureText = pureText.split(' ')[0];
-            pureText = pureText.replace(/[…….,;:!?()]/g, '');
+            pureText = pureText.replace(/[…….,;:!?()？！，]/g, '');
 
             if (!pureText) return;
 
@@ -500,6 +500,7 @@
         function cleanString(str) {
             if (!str) return '';
             let cleaned = str.toLowerCase()
+                             .replace(/[？，！\?,\.!]/g, '') // Tự động loại bỏ dấu câu khi so sánh
                              .replace(/\([^)]*\)/g, '')
                              .replace(/\[[^\]]*\]/g, '')
                              .trim().replace(/\s+/g, ' ');
