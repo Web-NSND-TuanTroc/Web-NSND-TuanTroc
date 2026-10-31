@@ -292,15 +292,6 @@
             </div>
 
             <div class="control-group">
-                <label>Giọng đọc:</label>
-                <select id="voiceSelect">
-                    <option value="speech">Trình duyệt (Native Web Speech)</option>
-                    <option value="google">Google TTS</option>
-                    <option value="baidu">Baidu TTS</option>
-                </select>
-            </div>
-
-            <div class="control-group">
                 <label>Tốc độ:</label>
                 <select id="speedSelect">
                     <option value="1.0">1.0x</option>
@@ -408,8 +399,6 @@
         let sequentialOffset = 0;
         let isAudioEnabled = true;
 
-        let globalAudio = new Audio();
-
         function fisherYatesShuffle(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -434,6 +423,7 @@
             });
         }
 
+        // Sử dụng hoàn toàn giọng đọc chuẩn của trình duyệt, triệt tiêu mọi lỗi nhai lại/lặp từ
         function speakText(text) {
             if (!isAudioEnabled || !text) return;
             
@@ -443,41 +433,16 @@
 
             if (!pureText) return;
 
-            const voiceSelectElem = document.getElementById('voiceSelect');
             const speedSelectElem = document.getElementById('speedSelect');
-            const voiceType = voiceSelectElem ? voiceSelectElem.value : 'speech';
             const speed = speedSelectElem ? parseFloat(speedSelectElem.value) : 1.0;
 
-            if (voiceType === 'speech' && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); 
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Ngắt ngay các luồng đọc cũ để không bị đọc đè/đọc dồn
                 const utterance = new SpeechSynthesisUtterance(pureText);
                 utterance.lang = 'zh-CN';
                 utterance.rate = speed;
                 window.speechSynthesis.speak(utterance);
-                return;
             }
-
-            const cleanText = encodeURIComponent(pureText);
-            let audioUrl = "";
-            if (voiceType === 'baidu') {
-                audioUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${cleanText}&spd=3&source=web`;
-            } else {
-                audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${cleanText}&tl=zh-CN&client=tw-ob`;
-            }
-
-            globalAudio.pause();
-            globalAudio.currentTime = 0;
-            globalAudio.src = audioUrl;
-            globalAudio.playbackRate = speed;
-            globalAudio.play().catch(e => {
-                console.log("Fallback Web Speech do audio URL bị chặn:", e);
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(pureText);
-                    utterance.lang = 'zh-CN';
-                    utterance.rate = speed;
-                    window.speechSynthesis.speak(utterance);
-                }
-            });
         }
 
         function removePinyinTones(str) {
@@ -500,7 +465,7 @@
         function cleanString(str) {
             if (!str) return '';
             let cleaned = str.toLowerCase()
-                             .replace(/[？，！\?,\.!]/g, '') // Tự động loại bỏ dấu câu khi so sánh
+                             .replace(/[？，！\?,\.!]/g, '')
                              .replace(/\([^)]*\)/g, '')
                              .replace(/\[[^\]]*\]/g, '')
                              .trim().replace(/\s+/g, ' ');
