@@ -562,7 +562,7 @@
             timerDisplay.innerText = `${mins}:${secs}`;
         }
 
-        // ĐỌC FILE EXCEL & THÔNG BÁO BẢN QUYỀN CHUYÊN NGHIỆP KHI SAI MÃ Z1
+        // ĐỌC FILE EXCEL & KIỂM TRA MÃ BẢO MẬT Z1
         const excelFileElem = document.getElementById('excelFile');
         if (excelFileElem) {
             excelFileElem.addEventListener('change', function(e) {
@@ -843,6 +843,10 @@
                 isCorrect = meaningVariants.some(variant => {
                     const cleanTarget = cleanString(variant);
                     if (cleanedInput === cleanTarget) return true;
+
+                    // Kiểm tra khớp chính xác khi tách từ bởi dấu phẩy, dấu gạch chéo
+                    const subVariants = variant.split(/[/,;|\n]+/).map(s => cleanString(s));
+                    if (subVariants.includes(cleanedInput)) return true;
 
                     let userText = " " + cleanedInput + " ";
                     let targetText = " " + cleanTarget + " ";
