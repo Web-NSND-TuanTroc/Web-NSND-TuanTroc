@@ -561,7 +561,7 @@
             timerDisplay.innerText = `${mins}:${secs}`;
         }
 
-        // ĐỌC FILE EXCEL THÔNG MINH - CHẤP NHẬN MỌI ĐỊNH DẠNG CỘT
+        // ĐỌC FILE EXCEL THÔNG MINH
         const excelFileElem = document.getElementById('excelFile');
         if (excelFileElem) {
             excelFileElem.addEventListener('change', function(e) {
@@ -587,7 +587,6 @@
                         let headerRowIndex = 0;
                         let colChinese = 1, colPinyin = 2, colMeaning = 3;
 
-                        // Tự động tìm dòng tiêu đề hoặc bắt đầu từ dòng 0 nếu không thấy
                         for (let i = 0; i < Math.min(rows.length, 5); i++) {
                             const rowStr = rows[i].join(" ").toUpperCase();
                             if (rowStr.includes("HÁN") || rowStr.includes("CHINESE") || rowStr.includes("PINYIN") || rowStr.includes("NGHĨA") || rowStr.includes("TIẾNG VIỆT")) {
@@ -607,12 +606,10 @@
                             const row = rows[i];
                             if (!row || row.length === 0) continue;
 
-                            // Quét các ô trong dòng để lấy dữ liệu nếu đúng cấu trúc
                             let chinese = row[colChinese] ? row[colChinese].toString().trim() : '';
                             let pinyin  = row[colPinyin]  ? row[colPinyin].toString().trim()  : '';
                             let meaning = row[colMeaning] ? row[colMeaning].toString().trim() : '';
 
-                            // Fallback linh hoạt nếu cột định nghĩa lệch
                             if (!chinese && row.length > 1) chinese = row[1].toString().trim();
                             if (!meaning && row.length > 3) meaning = row[3].toString().trim();
 
@@ -779,6 +776,35 @@
             }
         }
 
+        // --- THUẬT TOÁN TÍNH ĐỘ TƯƠNG ĐỒNG (FUZZY MATCH) THÔNG MINH ---
+        function getSimilarityRatio(str1, str2) {
+            const s1 = cleanString(str1);
+            const s2 = cleanString(str2);
+            if (s1 === s2) return 1.0;
+            if (!s1 || !s2) return 0.0;
+
+            const len1 = s1.length;
+            const len2 = s2.length;
+            const track = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
+
+            for (let i = 0; i <= len1; i += 1) track[0][i] = i;
+            for (let j = 0; j <= len2; j += 1) track[j][0] = j;
+
+            for (let j = 1; j <= len2; j += 1) {
+                for (let i = 1; i <= len1; i += 1) {
+                    const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
+                    track[j][i] = Math.min(
+                        track[j][i - 1] + 1, 
+                        track[j - 1][i] + 1, 
+                        track[j - 1][i - 1] + indicator 
+                    );
+                }
+            }
+            const distance = track[len2][len1];
+            const maxLen = Math.max(len1, len2);
+            return (maxLen - distance) / maxLen;
+        }
+
         function checkAnswer(index) {
             const inputElem = document.getElementById(`input_${index}`);
             if (!inputElem) return;
@@ -804,32 +830,29 @@
             const meaningVariants = splitVariants(item.meaning);
 
             if (mode === 'chinese_to_viet') {
+                // CHẤM ĐIỂM LINH ĐỘNG NGHĨA BẰNG ĐỘ TƯƠNG ĐỒNG (CHẤP NHẬN ĐỘ KHỚP >= 70%)
                 isCorrect = meaningVariants.some(variant => {
-                    const cleanVariant = cleanString(variant);
-                    if (cleanedInput === cleanVariant) return true;
+                    const cleanTarget = cleanString(variant);
+                    if (cleanedInput === cleanTarget) return true;
 
                     let userText = cleanedInput;
-                    let targetText = cleanVariant;
-
+                    let targetText = cleanTarget;
                     const synonyms = [
-                        ["bây giờ", "hiện tại"],
-                        ["định", "muốn", "tính"],
-                        ["tệ", "nghìn", "đồng", "k"],
-                        ["ngày mai", "mai"],
-                        ["hôm nay", "nay"],
-                        ["bắt đầu", "khởi đầu"],
-                        ["thời tiết", "trời"],
-                        ["đẹp", "nắng"]
+                        ["bây giờ", "hiện tại"], ["định", "muốn", "tính"],
+                        ["tệ", "nghìn", "đồng", "k"], ["ngày mai", "mai"],
+                        ["hôm nay", "nay"], ["thời tiết", "trời"]
                     ];
-
                     synonyms.forEach(group => {
                         group.forEach(word => {
                             userText = userText.replaceAll(word, group[0]);
                             targetText = targetText.replaceAll(word, group[0]);
                         });
                     });
+                    if (userText === targetText) return true;
 
-                    return userText === targetText;
+                    // Nếu gõ thiếu từ phụ hoặc sai sót nhẹ nhưng đạt độ tương đồng >= 70% vẫn tính đúng
+                    const similarity = getSimilarityRatio(userText, targetText);
+                    return similarity >= 0.70;
                 });
 
             } else if (mode === 'viet_to_chinese') {
@@ -840,7 +863,7 @@
                 isCorrect = chineseVariants.includes(cleanedInput) || 
                             pinyinVariants.includes(cleanedInput) || 
                             rawPinyinVariants.includes(cleanInputNoTone) ||
-                            meaningVariants.some(variant => cleanString(variant) === cleanedInput);
+                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanString(variant)) >= 0.70);
             }
 
             const chineseSpan = document.getElementById(`chinese_${index}`);
