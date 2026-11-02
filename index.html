@@ -776,7 +776,7 @@
             }
         }
 
-        // --- THUẬT TOÁN TÍNH ĐỘ TƯƠNG ĐỒNG (FUZZY MATCH) THÔNG MINH ---
+        // --- THUẬT TOÁN TÍNH ĐỘ TƯƠNG ĐỒNG THÔNG MINH (FUZZY MATCH) ---
         function getSimilarityRatio(str1, str2) {
             const s1 = cleanString(str1);
             const s2 = cleanString(str2);
@@ -830,29 +830,40 @@
             const meaningVariants = splitVariants(item.meaning);
 
             if (mode === 'chinese_to_viet') {
-                // CHẤM ĐIỂM LINH ĐỘNG NGHĨA BẰNG ĐỘ TƯƠNG ĐỒNG (CHẤP NHẬN ĐỘ KHỚP >= 70%)
+                // CHẤM ĐIỂM CỰC KỲ THOÁNG: HẠ NGƯỠNG 60% VÀ TỰ ĐỘNG BỎ QUA CÁC TỪ PHỤ
                 isCorrect = meaningVariants.some(variant => {
                     const cleanTarget = cleanString(variant);
                     if (cleanedInput === cleanTarget) return true;
 
                     let userText = cleanedInput;
                     let targetText = cleanTarget;
+
+                    // Nhóm từ đồng nghĩa và các từ phụ hay thêm bớt
                     const synonyms = [
                         ["bây giờ", "hiện tại"], ["định", "muốn", "tính"],
                         ["tệ", "nghìn", "đồng", "k"], ["ngày mai", "mai"],
-                        ["hôm nay", "nay"], ["thời tiết", "trời"]
+                        ["hôm nay", "nay"], ["thời tiết", "trời"],
+                        ["là", ""], ["có", ""], ["được", ""], ["thì", ""]
                     ];
                     synonyms.forEach(group => {
-                        group.forEach(word => {
-                            userText = userText.replaceAll(word, group[0]);
-                            targetText = targetText.replaceAll(word, group[0]);
-                        });
+                        const mainWord = group[0];
+                        for (let i = 1; i < group.length; i++) {
+                            const subWord = group[i];
+                            if (subWord) {
+                                userText = userText.replaceAll(subWord, mainWord);
+                                targetText = targetText.replaceAll(subWord, mainWord);
+                            }
+                        }
                     });
+
+                    userText = userText.replace(/\s+/g, ' ').trim();
+                    targetText = targetText.replace(/\s+/g, ' ').trim();
+
                     if (userText === targetText) return true;
 
-                    // Nếu gõ thiếu từ phụ hoặc sai sót nhẹ nhưng đạt độ tương đồng >= 70% vẫn tính đúng
+                    // Ngưỡng 60% giúp các câu dài dịch thoát ý vượt qua dễ dàng
                     const similarity = getSimilarityRatio(userText, targetText);
-                    return similarity >= 0.70;
+                    return similarity >= 0.60;
                 });
 
             } else if (mode === 'viet_to_chinese') {
@@ -863,7 +874,7 @@
                 isCorrect = chineseVariants.includes(cleanedInput) || 
                             pinyinVariants.includes(cleanedInput) || 
                             rawPinyinVariants.includes(cleanInputNoTone) ||
-                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanString(variant)) >= 0.70);
+                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanString(variant)) >= 0.60);
             }
 
             const chineseSpan = document.getElementById(`chinese_${index}`);
