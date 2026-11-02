@@ -223,7 +223,19 @@
             table-layout: fixed;
         }
 
-        th, td {
+        th {
+            background-color: #fce7f3;
+            color: #831843;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 14px 10px;
+            text-align: center;
+            border-bottom: 2px solid #fbcfe8;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        td {
             padding: 12px 10px;
             text-align: center;
             border-bottom: 1px solid #f3f4f6;
@@ -231,13 +243,6 @@
             word-wrap: break-word;
             white-space: normal;
             vertical-align: middle;
-        }
-
-        th {
-            background-color: #fce7f3;
-            color: #831843;
-            font-weight: 700;
-            letter-spacing: 0.01em;
         }
 
         tr.row-correct {
@@ -248,12 +253,15 @@
             background-color: #fef2f2 !important;
         }
 
-        /* ĐÃ SỬA CỘT STT: RỘNG HƠN & KHÔNG NHẢY DÒNG CHỮ STT */
-        .col-stt { width: 60px; white-space: nowrap; font-weight: 600; color: #6b7280; }
-        .col-hanzi { width: 28%; font-size: 1.25rem; font-weight: 700; color: #111827; line-height: 1.4; }
-        .col-pinyin { width: 22%; color: #4b5563; font-weight: 500; line-height: 1.4; }
-        .col-viet { width: 24%; color: #1f2937; font-weight: 500; line-height: 1.4; }
+        .col-stt { width: 55px; font-weight: 600; color: #4b5563; }
+        .col-hanzi { width: 28%; }
+        .col-pinyin { width: 22%; }
+        .col-viet { width: 24%; }
         .col-input { width: 26%; }
+
+        td.col-hanzi span { font-size: 1.25rem; font-weight: 700; color: #111827; line-height: 1.4; }
+        td.col-pinyin { color: #4b5563; font-weight: 500; }
+        td.col-viet { color: #1f2937; font-weight: 500; }
 
         .col-input textarea { 
             width: 100%;
@@ -313,9 +321,9 @@
             table { font-size: 0.88rem; table-layout: auto; }
             th, td { padding: 8px 4px; }
             .col-stt { width: 38px; font-size: 0.8rem; }
-            .col-hanzi { font-size: 1.05rem; }
-            .col-pinyin { font-size: 0.82rem; }
-            .col-viet { font-size: 0.85rem; }
+            td.col-hanzi span { font-size: 1.05rem; }
+            td.col-pinyin { font-size: 0.82rem; }
+            td.col-viet { font-size: 0.85rem; }
             
             .col-input textarea { 
                 padding: 6px 4px; 
@@ -515,7 +523,7 @@
             }, 50);
         }
 
-        /* --- QUẢN LÝ SỔ TỪ SAI (REVIEW MISTAKES) --- */
+        /* --- QUẢN LÝ SỔ TỪ SAI --- */
         function getWrongWords() {
             try {
                 return JSON.parse(localStorage.getItem('wrong_words')) || [];
