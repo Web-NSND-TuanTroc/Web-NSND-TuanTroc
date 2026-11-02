@@ -480,7 +480,7 @@
             return s;
         }
 
-        // HÀM LÀM SẠCH CHUỖI SIÊU THÔNG MINH (XÓA MỌI LOẠI NGOẶC VÀ CHUẨN HÓA NFC)
+        // LOẠI BỎ TRIỆT ĐỂ MỌI NỘI DUNG NẰM TRONG NGOẶC
         function cleanString(str) {
             if (!str) return '';
             let cleaned = str.normalize('NFC').toLowerCase()
@@ -581,7 +581,6 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                        // KIỂM TRA MÃ KHÓA Ở Ô Z1
                         const cellZ1 = worksheet['Z1'] ? worksheet['Z1'].v.toString().trim() : '';
                         if (cellZ1 !== SECRET_Z1_KEY) {
                             alert("Bản quyền file không hợp lệ hoặc sai mã xác thực. Vui lòng liên hệ Admin để được hỗ trợ!");
