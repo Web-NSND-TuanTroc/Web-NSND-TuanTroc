@@ -136,6 +136,13 @@
             background-color: #9ca3af;
         }
 
+        button.btn-warning {
+            background-color: #f59e0b;
+        }
+        button.btn-warning:hover {
+            background-color: #d97706;
+        }
+
         .stats-bar {
             display: flex;
             justify-content: space-between;
@@ -330,9 +337,10 @@
                 <span id="loadingStatus"></span>
             </div>
 
-            <div class="control-group" style="margin-left: auto;">
+            <div class="control-group" style="margin-left: auto; flex-wrap: wrap; gap: 6px;">
                 <button id="btnNewQuiz">🔄 Đề mới</button>
                 <button id="btnRetryQuiz">🔁 Làm lại</button>
+                <button id="btnReviewWrong" class="btn-warning">❌ Luyện câu sai (<span id="wrongCount">0</span>)</button>
                 <button id="btnReset" class="muted">🗑️ Reset</button>
             </div>
         </div>
@@ -463,6 +471,36 @@
             }, 50);
         }
 
+        /* --- QUẢN LÝ SỔ TỪ SAI (REVIEW MISTAKES) --- */
+        function getWrongWords() {
+            try {
+                return JSON.parse(localStorage.getItem('wrong_words')) || [];
+            } catch(e) {
+                return [];
+            }
+        }
+
+        function saveWrongWord(item) {
+            let list = getWrongWords();
+            if (!list.some(w => w.chinese === item.chinese && w.pinyin === item.pinyin)) {
+                list.push(item);
+                localStorage.setItem('wrong_words', JSON.stringify(list));
+                updateWrongCountBadge();
+            }
+        }
+
+        function removeWrongWord(item) {
+            let list = getWrongWords();
+            list = list.filter(w => !(w.chinese === item.chinese && w.pinyin === item.pinyin));
+            localStorage.setItem('wrong_words', JSON.stringify(list));
+            updateWrongCountBadge();
+        }
+
+        function updateWrongCountBadge() {
+            const badge = document.getElementById('wrongCount');
+            if (badge) badge.innerText = getWrongWords().length;
+        }
+
         function removePinyinTones(str) {
             if (!str) return '';
             return str.normalize('NFD')
@@ -480,7 +518,6 @@
             return s;
         }
 
-        // HÀM LOẠI BỎ TOÀN BỘ PHẦN TRONG NGOẶC ĐỂ SO SÁNH
         function cleanString(str) {
             if (!str) return '';
             let noBracket = str.replace(/\([^)]*\)/g, '')
@@ -527,14 +564,17 @@
             
             const btnNewQuiz = document.getElementById('btnNewQuiz');
             const btnRetryQuiz = document.getElementById('btnRetryQuiz');
+            const btnReviewWrong = document.getElementById('btnReviewWrong');
             const btnReset = document.getElementById('btnReset');
             const modeSelectElem = document.getElementById('modeSelect');
 
             if (btnNewQuiz) btnNewQuiz.addEventListener('click', startNewQuiz);
             if (btnRetryQuiz) btnRetryQuiz.addEventListener('click', retryCurrentQuiz);
+            if (btnReviewWrong) btnReviewWrong.addEventListener('click', startWrongWordsQuiz);
             if (btnReset) btnReset.addEventListener('click', resetAllData);
             if (modeSelectElem) modeSelectElem.addEventListener('change', startNewQuiz);
 
+            updateWrongCountBadge();
             startNewQuiz();
         };
 
@@ -685,6 +725,17 @@
             renderTable();
         }
 
+        function startWrongWordsQuiz() {
+            const wrongList = getWrongWords();
+            if (wrongList.length === 0) {
+                alert("Chúc mừng! Hiện tại bạn không có từ nào bị sai.");
+                return;
+            }
+            currentQuizData = fisherYatesShuffle(wrongList);
+            resetTimer();
+            renderTable();
+        }
+
         const shuffleSelectElem = document.getElementById('shuffleSelect');
         if (shuffleSelectElem) shuffleSelectElem.addEventListener('change', function() { sequentialOffset = 0; });
 
@@ -696,14 +747,16 @@
         }
 
         function resetAllData() {
-            if (confirm("Bạn có chắc chắn muốn xóa dữ liệu đã lưu?")) {
+            if (confirm("Bạn có chắc chắn muốn xóa dữ liệu đã lưu và danh sách từ sai?")) {
                 localStorage.removeItem('hsk_vocab_data');
+                localStorage.removeItem('wrong_words');
                 fullVocabData = [...EMBEDDED_VOCAB_DATA];
                 const statusText = document.getElementById('loadingStatus');
                 if (statusText) statusText.innerText = "";
                 document.getElementById('rangeFrom').value = 1;
                 document.getElementById('rangeTo').value = fullVocabData.length;
                 sequentialOffset = 0;
+                updateWrongCountBadge();
                 startNewQuiz();
             }
         }
@@ -729,7 +782,7 @@
                 } else if (mode === 'viet_to_chinese') {
                     displayChinese = '***';
                     displayPinyin = '***';
-                    displayMeaning = item.meaning || '---'; // ĐÃ FIX CHUẨN XÁC: Nghĩa TV nằm ở cột Nghĩa Tiếng Việt
+                    displayMeaning = item.meaning || '---';
                 } else if (mode === 'listening_mode') {
                     displayChinese = '***';
                     displayPinyin = '***';
@@ -764,19 +817,45 @@
 
                 tbody.appendChild(tr);
             });
+
             updateStats();
+
+            // Tự động đọc từ đầu tiên khi ở chế độ Luyện Nghe & focus ô input
+            if (currentQuizData.length > 0) {
+                const firstInput = document.getElementById('input_0');
+                if (firstInput) firstInput.focus();
+                if (mode === 'listening_mode') {
+                    speakText(currentQuizData[0].chinese);
+                }
+            }
         }
 
         function handleKeyDown(event, index) {
             checkAndStartTimer();
+            const inputElem = document.getElementById(`input_${index}`);
+            const modeSelectElem = document.getElementById('modeSelect');
+            const mode = modeSelectElem ? modeSelectElem.value : 'chinese_to_viet';
+
+            // PHÍM TẮT NGHE LẠI NHANH (Ctrl hoặc Space khi ô nhập trống)
+            if (event.key === 'Control' || (event.code === 'Space' && inputElem && inputElem.value.trim() === '')) {
+                if (event.code === 'Space') event.preventDefault();
+                speakText(currentQuizData[index].chinese);
+                return;
+            }
+
             if (event.key === 'Enter' || event.keyCode === 13) {
                 event.preventDefault();
                 checkAnswer(index); 
                 
-                const nextInput = document.getElementById(`input_${index + 1}`);
+                const nextIndex = index + 1;
+                const nextInput = document.getElementById(`input_${nextIndex}`);
                 if (nextInput) {
                     nextInput.focus();
                     nextInput.select();
+                    // TỰ ĐỘNG PHÁT ÂM CÂU TIẾP THEO Ở CHẾ ĐỘ LUYỆN NGHE
+                    if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
+                        speakText(currentQuizData[nextIndex].chinese);
+                    }
                 }
             }
         }
@@ -900,9 +979,11 @@
 
             if (isCorrect) {
                 if (tr) tr.className = 'row-correct';
-                speakText(item.chinese);
+                if (mode !== 'listening_mode') speakText(item.chinese);
+                removeWrongWord(item); // Xóa khỏi sổ từ sai nếu trả lời đúng
             } else {
                 if (tr) tr.className = 'row-wrong';
+                saveWrongWord(item); // Lưu vào sổ từ sai khi làm sai
             }
 
             updateStats();
