@@ -410,7 +410,6 @@
             {"chinese": "属", "type": "Động từ", "pinyin": "shǔ", "meaning": "Cầm tinh, thuộc về"}
         ];
 
-        // MÃ KHÓA BẢO MẬT CỦA ANH
         const SECRET_Z1_KEY = "CAMTU2019S2THANHAN2025"; 
 
         let fullVocabData = [];
@@ -481,12 +480,13 @@
             return s;
         }
 
+        // TỰ ĐỘNG XÓA SẠCH NỘI DUNG TRONG NGOẶC ĐỂ SO SÁNH Ý CHÍNH CHUẨN XÁC
         function cleanString(str) {
             if (!str) return '';
             let cleaned = str.toLowerCase()
-                             .replace(/[？，！\?,\.!:;""''`~]/g, '') 
                              .replace(/\([^)]*\)/g, '')
                              .replace(/\[[^\]]*\]/g, '')
+                             .replace(/[？，！\?,\.!:;""''`~]/g, '') 
                              .trim().replace(/\s+/g, ' ');
             return normalizeVietnamese(cleaned);
         }
@@ -579,7 +579,7 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                        // KIỂM TRA MÃ KHÓA Ở Ô Z1 VÀ HIỂN THỊ CẢNH BÁO BẢN QUYỀN
+                        // KIỂM TRA MÃ KHÓA Ở Ô Z1
                         const cellZ1 = worksheet['Z1'] ? worksheet['Z1'].v.toString().trim() : '';
                         if (cellZ1 !== SECRET_Z1_KEY) {
                             alert("Bản quyền file không hợp lệ hoặc sai mã xác thực. Vui lòng liên hệ Admin để được hỗ trợ!");
@@ -844,7 +844,6 @@
                     const cleanTarget = cleanString(variant);
                     if (cleanedInput === cleanTarget) return true;
 
-                    // Kiểm tra khớp chính xác khi tách từ bởi dấu phẩy, dấu gạch chéo
                     const subVariants = variant.split(/[/,;|\n]+/).map(s => cleanString(s));
                     if (subVariants.includes(cleanedInput)) return true;
 
