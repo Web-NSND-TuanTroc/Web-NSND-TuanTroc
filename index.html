@@ -480,12 +480,14 @@
             return s;
         }
 
-        // TỰ ĐỘNG XÓA SẠCH NỘI DUNG TRONG NGOẶC ĐỂ SO SÁNH Ý CHÍNH CHUẨN XÁC
+        // HÀM LÀM SẠCH CHUỖI SIÊU THÔNG MINH (XÓA MỌI LOẠI NGOẶC VÀ CHUẨN HÓA NFC)
         function cleanString(str) {
             if (!str) return '';
-            let cleaned = str.toLowerCase()
+            let cleaned = str.normalize('NFC').toLowerCase()
                              .replace(/\([^)]*\)/g, '')
+                             .replace(/（[^）]*）/g, '')
                              .replace(/\[[^\]]*\]/g, '')
+                             .replace(/【[^】]*】/g, '')
                              .replace(/[？，！\?,\.!:;""''`~]/g, '') 
                              .trim().replace(/\s+/g, ' ');
             return normalizeVietnamese(cleaned);
