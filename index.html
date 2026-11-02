@@ -410,8 +410,8 @@
             {"chinese": "属", "type": "Động từ", "pinyin": "shǔ", "meaning": "Cầm tinh, thuộc về"}
         ];
 
-        // MÃ KHÓA BẢO MẬT TẠI Ô Z1 (Anh có thể đổi lại mã khóa theo ý muốn)
-        const SECRET_Z1_KEY = "HSK_TUAN_2026"; 
+        // MÃ KHÓA BẢO MẬT CỦA ANH
+        const SECRET_Z1_KEY = "CAMTU2019S2THANHAN2025"; 
 
         let fullVocabData = [];
         let currentQuizData = [];
@@ -562,7 +562,7 @@
             timerDisplay.innerText = `${mins}:${secs}`;
         }
 
-        // ĐỌC FILE EXCEL CÓ KIỂM TRA MÃ KHÓA Ô Z1
+        // ĐỌC FILE EXCEL & THÔNG BÁO BẢN QUYỀN CHUYÊN NGHIỆP KHI SAI MÃ Z1
         const excelFileElem = document.getElementById('excelFile');
         if (excelFileElem) {
             excelFileElem.addEventListener('change', function(e) {
@@ -579,11 +579,11 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                        // KIỂM TRA MÃ KHÓA Ở Ô Z1
+                        // KIỂM TRA MÃ KHÓA Ở Ô Z1 VÀ HIỂN THỊ CẢNH BÁO BẢN QUYỀN
                         const cellZ1 = worksheet['Z1'] ? worksheet['Z1'].v.toString().trim() : '';
                         if (cellZ1 !== SECRET_Z1_KEY) {
-                            alert("TRUY CẬP BỊ TỪ CHỐI! Mã khóa ở ô Z1 không hợp lệ.");
-                            if (statusText) { statusText.innerText = "❌ Sai mã khóa ô Z1!"; statusText.style.color = "#dc2626"; }
+                            alert("Bản quyền file không hợp lệ hoặc sai mã xác thực. Vui lòng liên hệ Admin để được hỗ trợ!");
+                            if (statusText) { statusText.innerText = "❌ Sai mã xác thực bản quyền!"; statusText.style.color = "#dc2626"; }
                             return;
                         }
 
