@@ -480,24 +480,31 @@
             return s;
         }
 
-        // LOẠI BỎ TRIỆT ĐỂ MỌI NỘI DUNG NẰM TRONG NGOẶC
+        // HÀM LOẠI BỎ TOÀN BỘ PHẦN TRONG NGOẶC (CHỈ GIỮ LẠI NGHĨA CHÍNH BÊN NGOÀI)
         function cleanString(str) {
             if (!str) return '';
-            let cleaned = str.normalize('NFC').toLowerCase()
-                             .replace(/\([^)]*\)/g, '')
-                             .replace(/（[^）]*）/g, '')
-                             .replace(/\[[^\]]*\]/g, '')
-                             .replace(/【[^】]*】/g, '')
-                             .replace(/[？，！\?,\.!:;""''`~]/g, '') 
-                             .trim().replace(/\s+/g, ' ');
+            // Xóa sạch mọi loại ngoặc và nội dung bên trong nó trước
+            let noBracket = str.replace(/\([^)]*\)/g, '')
+                               .replace(/（[^）]*）/g, '')
+                               .replace(/\[[^\]]*\]/g, '')
+                               .replace(/【[^】]*】/g, '');
+            
+            let cleaned = noBracket.normalize('NFC').toLowerCase()
+                                   .replace(/[？，！\?,\.!:;""''`~]/g, '') 
+                                   .trim().replace(/\s+/g, ' ');
             return normalizeVietnamese(cleaned);
         }
 
+        // TÁCH CÁC BIẾN THỂ DỰA TRÊN DẤU PHẦY/CHẤM PHẨY SAU KHI ĐÃ CẮT BỎ NGOẶC
         function splitVariants(str) {
             if (!str) return [];
-            return str.split(/[/,;|\n]+/)
-                      .map(s => cleanString(s))
-                      .filter(s => s.length > 0);
+            let noBracket = str.replace(/\([^)]*\)/g, '')
+                               .replace(/（[^）]*）/g, '')
+                               .replace(/\[[^\]]*\]/g, '')
+                               .replace(/【[^】]*】/g, '');
+            return noBracket.split(/[/,;|\n]+/)
+                            .map(s => cleanString(s))
+                            .filter(s => s.length > 0);
         }
 
         function autoExpandInput(textarea) {
@@ -564,7 +571,7 @@
             timerDisplay.innerText = `${mins}:${secs}`;
         }
 
-        // ĐỌC FILE EXCEL & KIỂM TRA MÃ BẢO MẬT Z1
+        // ĐỌC FILE EXCEL & KIỂM TRA MÃ Z1
         const excelFileElem = document.getElementById('excelFile');
         if (excelFileElem) {
             excelFileElem.addEventListener('change', function(e) {
@@ -596,18 +603,10 @@
                         }
 
                         let headerRowIndex = 0;
-                        let colChinese = 1, colPinyin = 2, colMeaning = 3;
-
                         for (let i = 0; i < Math.min(rows.length, 5); i++) {
                             const rowStr = rows[i].join(" ").toUpperCase();
                             if (rowStr.includes("HÁN") || rowStr.includes("CHINESE") || rowStr.includes("PINYIN") || rowStr.includes("NGHĨA") || rowStr.includes("TIẾNG VIỆT")) {
                                 headerRowIndex = i;
-                                const headers = rows[i].map(h => h.toString().trim().toUpperCase());
-                                headers.forEach((h, idx) => {
-                                    if (h.includes('CHINESE') || h.includes('CHENESE') || h.includes('HÁN') || h.includes('HANTU')) colChinese = idx;
-                                    else if (h.includes('PINYIN') || h.includes('PHIÊN ÂM')) colPinyin = idx;
-                                    else if (h.includes('MEANING') || h.includes('NGHĨA') || h.includes('TIẾNG VIỆT')) colMeaning = idx;
-                                });
                                 break;
                             }
                         }
@@ -617,12 +616,9 @@
                             const row = rows[i];
                             if (!row || row.length === 0) continue;
 
-                            let chinese = row[colChinese] ? row[colChinese].toString().trim() : '';
-                            let pinyin  = row[colPinyin]  ? row[colPinyin].toString().trim()  : '';
-                            let meaning = row[colMeaning] ? row[colMeaning].toString().trim() : '';
-
-                            if (!chinese && row.length > 1) chinese = row[1].toString().trim();
-                            if (!meaning && row.length > 3) meaning = row[3].toString().trim();
+                            let chinese = row[1] ? row[1].toString().trim() : (row[0] ? row[0].toString().trim() : '');
+                            let pinyin  = row[2] ? row[2].toString().trim() : (row[1] ? row[1].toString().trim() : '');
+                            let meaning = row[3] ? row[3].toString().trim() : (row[2] ? row[2].toString().trim() : '');
 
                             if (chinese || meaning) {
                                 parsedData.push({ chinese, type: '', pinyin, meaning });
@@ -787,7 +783,6 @@
             }
         }
 
-        // --- THUẬT TOÁN TÍNH ĐỘ TƯƠNG ĐỒNG THÔNG MINH (FUZZY MATCH) ---
         function getSimilarityRatio(str1, str2) {
             const s1 = cleanString(str1);
             const s2 = cleanString(str2);
