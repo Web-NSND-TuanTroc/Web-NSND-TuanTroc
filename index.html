@@ -175,8 +175,15 @@
             background-color: #c2410c;
         }
 
-        /* --- THANH THỐNG KÊ GIỮ NGUYÊN VĂN ĐÃ ĐƯỢC ĐƯA XUỐNG DƯỚI --- */
+        /* KHUNG CHỨA (Dùng Flexbox để đảo vị trí linh hoạt giữa PC và Điện thoại) */
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Mặc định trên PC: Thanh thống kê (order: 1) nằm TRÊN Bảng từ vựng (order: 2) */
         .stats-bar {
+            order: 1;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -184,13 +191,21 @@
             border: 1px solid #fecdd3;
             padding: 14px 20px;
             border-radius: 12px;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             font-weight: 600;
             font-size: 0.9rem;
             color: #831843;
             flex-wrap: wrap;
             gap: 12px;
+        }
+
+        .table-responsive {
+            order: 2;
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         .progress-bar-container {
@@ -208,14 +223,6 @@
             width: 0%;
             transition: width 0.3s ease;
             border-radius: 4px;
-        }
-
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid #f3f4f6;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         table {
@@ -311,6 +318,7 @@
             font-weight: 600;
         }
 
+        /* RIÊNG TRÊN ĐIỆN THOẠI (DƯỚI 768px): ĐẢO VỊ TRÍ BẢNG LÊN TRÊN, THANH THỐNG KÊ XUỐNG DƯỚI */
         @media screen and (max-width: 768px) {
             body { padding: 8px; }
             .container { padding: 14px 10px; border-radius: 14px; }
@@ -318,8 +326,16 @@
             .controls-section { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; }
             .control-group { justify-content: space-between; width: 100%; }
             .control-group input[type="file"], .control-group select { flex: 1; max-width: 60%; }
-            .stats-bar { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px; font-size: 0.85rem; }
             
+            /* Đảo trật tự trên điện thoại: Bảng từ vựng lên trên (order: 1), Thanh thống kê xuống dưới (order: 2) */
+            .table-responsive { order: 1; margin-bottom: 15px; }
+            .stats-bar { 
+                order: 2; 
+                margin-bottom: 0;
+                font-size: 0.85rem; 
+                padding: 10px 12px; 
+            }
+
             table { font-size: 0.88rem; table-layout: auto; }
             th, td { padding: 8px 4px; }
             .col-stt { width: 38px; font-size: 0.8rem; }
@@ -399,32 +415,35 @@
             </div>
         </div>
 
-        <!-- BẢNG TỪ VỰNG NẰM PHÍA TRÊN -->
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="col-stt">STT</th>
-                        <th class="col-hanzi">Hán Tự</th>
-                        <th class="col-pinyin">Pinyin</th>
-                        <th class="col-viet">Nghĩa Tiếng Việt</th>
-                        <th class="col-input">Nhập đáp án</th>
-                    </tr>
-                </thead>
-                <tbody id="vocabTable"></tbody>
-            </table>
-        </div>
+        <!-- KHUNG BỌC ĐỂ TỰ ĐỘNG ĐẢO VỊ TRÍ TRÊN MÁY TÍNH VÀ ĐIỆN THOẠI -->
+        <div class="main-content-wrapper">
+            <!-- Thanh thống kê (Trên PC nằm trên, trên Điện thoại tự động xuống dưới cùng) -->
+            <div class="stats-bar">
+                <div>Tổng số: <span id="statTotal">0</span></div>
+                <div>Đã làm: <span id="statDone">0</span></div>
+                <div>Đúng: <span id="statCorrect" style="color: #059669;">0</span></div>
+                <div>Sai: <span id="statWrong" style="color: #dc2626;">0</span></div>
+                <div>Tỷ lệ đúng: <span id="statRate">0.0%</span></div>
+                <div>⏱️ Thời gian: <span id="timerDisplay">00:00</span></div>
+                <div class="progress-bar-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+            </div>
 
-        <!-- THANH THỐNG KÊ ĐÃ CHUYỂN XUỐNG DƯỚI CÙNG (GIỮ NGUYÊN 100% CHỮ) -->
-        <div class="stats-bar">
-            <div>Tổng số: <span id="statTotal">0</span></div>
-            <div>Đã làm: <span id="statDone">0</span></div>
-            <div>Đúng: <span id="statCorrect" style="color: #059669;">0</span></div>
-            <div>Sai: <span id="statWrong" style="color: #dc2626;">0</span></div>
-            <div>Tỷ lệ đúng: <span id="statRate">0.0%</span></div>
-            <div>⏱️ Thời gian: <span id="timerDisplay">00:00</span></div>
-            <div class="progress-bar-container">
-                <div id="progressBar" class="progress-bar"></div>
+            <!-- Bảng từ vựng -->
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-stt">STT</th>
+                            <th class="col-hanzi">Hán Tự</th>
+                            <th class="col-pinyin">Pinyin</th>
+                            <th class="col-viet">Nghĩa Tiếng Việt</th>
+                            <th class="col-input">Nhập đáp án</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vocabTable"></tbody>
+                </table>
             </div>
         </div>
     </div>
