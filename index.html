@@ -410,6 +410,9 @@
             {"chinese": "属", "type": "Động từ", "pinyin": "shǔ", "meaning": "Cầm tinh, thuộc về"}
         ];
 
+        // MÃ KHÓA BẢO MẬT TẠI Ô Z1 (Anh có thể đổi lại mã khóa theo ý muốn)
+        const SECRET_Z1_KEY = "HSK_TUAN_2026"; 
+
         let fullVocabData = [];
         let currentQuizData = [];
         let timerInterval = null;
@@ -442,25 +445,23 @@
             });
         }
 
+        let speechTimeout = null;
         function speakText(text) {
             if (!isAudioEnabled || !text) return;
-            
-            let pureText = text.split(/[/,;|\n]+/)[0].trim();
-            pureText = pureText.split(' ')[0];
-            pureText = pureText.replace(/[…….,;:!?()？！，]/g, '');
+            if (!('speechSynthesis' in window)) return;
 
-            if (!pureText) return;
+            window.speechSynthesis.cancel();
+            if (speechTimeout) clearTimeout(speechTimeout);
 
-            const speedSelectElem = document.getElementById('speedSelect');
-            const speed = speedSelectElem ? parseFloat(speedSelectElem.value) : 1.0;
-
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(pureText);
+            speechTimeout = setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-CN';
-                utterance.rate = speed;
+                
+                const speedSelectElem = document.getElementById('speedSelect');
+                utterance.rate = speedSelectElem ? parseFloat(speedSelectElem.value) : 1.0;
+
                 window.speechSynthesis.speak(utterance);
-            }
+            }, 50);
         }
 
         function removePinyinTones(str) {
@@ -561,7 +562,7 @@
             timerDisplay.innerText = `${mins}:${secs}`;
         }
 
-        // ĐỌC FILE EXCEL THÔNG MINH
+        // ĐỌC FILE EXCEL CÓ KIỂM TRA MÃ KHÓA Ô Z1
         const excelFileElem = document.getElementById('excelFile');
         if (excelFileElem) {
             excelFileElem.addEventListener('change', function(e) {
@@ -577,6 +578,15 @@
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, { type: 'array' });
                         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                        // KIỂM TRA MÃ KHÓA Ở Ô Z1
+                        const cellZ1 = worksheet['Z1'] ? worksheet['Z1'].v.toString().trim() : '';
+                        if (cellZ1 !== SECRET_Z1_KEY) {
+                            alert("TRUY CẬP BỊ TỪ CHỐI! Mã khóa ở ô Z1 không hợp lệ.");
+                            if (statusText) { statusText.innerText = "❌ Sai mã khóa ô Z1!"; statusText.style.color = "#dc2626"; }
+                            return;
+                        }
+
                         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
                         if (!rows || rows.length === 0) {
@@ -830,20 +840,23 @@
             const meaningVariants = splitVariants(item.meaning);
 
             if (mode === 'chinese_to_viet') {
-                // CHẤM ĐIỂM CỰC KỲ THOÁNG: HẠ NGƯỠNG 60% VÀ TỰ ĐỘNG BỎ QUA CÁC TỪ PHỤ
                 isCorrect = meaningVariants.some(variant => {
                     const cleanTarget = cleanString(variant);
                     if (cleanedInput === cleanTarget) return true;
 
-                    let userText = cleanedInput;
-                    let targetText = cleanTarget;
+                    let userText = " " + cleanedInput + " ";
+                    let targetText = " " + cleanTarget + " ";
 
-                    // Nhóm từ đồng nghĩa và các từ phụ hay thêm bớt
+                    const fillerWords = [" là ", " có ", " được ", " thì ", " của "];
+                    fillerWords.forEach(word => {
+                        userText = userText.replaceAll(word, " ");
+                        targetText = targetText.replaceAll(word, " ");
+                    });
+
                     const synonyms = [
                         ["bây giờ", "hiện tại"], ["định", "muốn", "tính"],
                         ["tệ", "nghìn", "đồng", "k"], ["ngày mai", "mai"],
-                        ["hôm nay", "nay"], ["thời tiết", "trời"],
-                        ["là", ""], ["có", ""], ["được", ""], ["thì", ""]
+                        ["hôm nay", "nay"], ["thời tiết", "trời"]
                     ];
                     synonyms.forEach(group => {
                         const mainWord = group[0];
@@ -861,9 +874,8 @@
 
                     if (userText === targetText) return true;
 
-                    // Ngưỡng 60% giúp các câu dài dịch thoát ý vượt qua dễ dàng
                     const similarity = getSimilarityRatio(userText, targetText);
-                    return similarity >= 0.60;
+                    return similarity >= 0.55;
                 });
 
             } else if (mode === 'viet_to_chinese') {
@@ -874,7 +886,7 @@
                 isCorrect = chineseVariants.includes(cleanedInput) || 
                             pinyinVariants.includes(cleanedInput) || 
                             rawPinyinVariants.includes(cleanInputNoTone) ||
-                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanString(variant)) >= 0.60);
+                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanString(variant)) >= 0.55);
             }
 
             const chineseSpan = document.getElementById(`chinese_${index}`);
