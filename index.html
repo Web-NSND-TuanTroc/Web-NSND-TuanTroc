@@ -832,7 +832,7 @@
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
                                 oninput="checkAndStartTimer();"
-                                onkeyup="if(event.key === 'Enter') { jumpToNext(${index}, '${mode}'); }"
+                                onkeydown="if(event.keyCode === 13 || event.key === 'Enter') { event.preventDefault(); jumpToNext(${index}, '${mode}'); }"
                                 onchange="checkAnswer(${index});">
                     </td>
                 `;
