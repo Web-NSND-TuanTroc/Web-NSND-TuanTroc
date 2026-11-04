@@ -840,150 +840,123 @@
                                 rows="1"
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-                                oninput="checkAndStartTimer(); autoExpandInput(this);"
-                                onblur="checkAnswer(${index});"></textarea>
+                                oninput="autoExpandInput(this)"
+                                onkeydown="handleKeyEnter(event, ${index})"
+                                placeholder="Gõ pinyin / nghĩa..."></textarea>
                     </td>
                 `;
-
-                const audioWrapSpan = tr.querySelector(`#audio_wrap_${index}`);
-                if (mode === 'chinese_to_viet' || mode === 'listening_mode') {
-                    if(audioWrapSpan) {
-                        audioWrapSpan.innerHTML = `<button class="audio-btn" onclick="speakText('${item.chinese.replace(/'/g, "\\'")}')" title="Nghe">🔊</button>`;
-                    }
-                }
-
                 tbody.appendChild(tr);
-            });
-
-            updateStats();
-
-            if (currentQuizData.length > 0) {
-                const firstInput = document.getElementById('input_0');
-                if (firstInput) firstInput.focus();
-                if (mode === 'listening_mode') {
-                    speakText(currentQuizData[0].chinese);
+                
+                const textareaElem = document.getElementById(`input_${index}`);
+                if (textareaElem) {
+                    autoExpandInput(textareaElem);
                 }
-            }
+            });
+            
+            updateStatsBar();
         }
 
-        function getSimilarityRatio(str1, str2) {
-            const s1 = cleanLoose(str1);
-            const s2 = cleanLoose(str2);
-            if (s1 === s2) return 1.0;
-            if (!s1 || !s2) return 0.0;
-
-            const len1 = s1.length;
-            const len2 = s2.length;
-            const track = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
-
-            for (let i = 0; i <= len1; i += 1) track[0][i] = i;
-            for (let j = 0; j <= len2; j += 1) track[j][0] = j;
-
-            for (let j = 1; j <= len2; j += 1) {
-                for (let i = 1; i <= len1; i += 1) {
-                    const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
-                    track[j][i] = Math.min(track[j][i - 1] + 1, track[j - 1][i] + 1, track[j - 1][i - 1] + indicator);
+        // Xử lý khi ấn Enter: chặn xuống dòng, check đáp án và nhảy sang ô tiếp theo mượt mà
+        function handleKeyEnter(event, index) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                checkAnswer(index);
+                
+                const nextInput = document.getElementById(`input_${index + 1}`);
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
                 }
             }
-            return (Math.max(len1, len2) - track[len2][len1]) / Math.max(len1, len2);
         }
 
         function checkAnswer(index) {
-            const inputElem = document.getElementById(`input_${index}`);
-            if (!inputElem) return;
-
-            const inputVal = inputElem.value;
-            const tr = document.getElementById(`row_${index}`);
+            checkAndStartTimer();
             const item = currentQuizData[index];
-            const modeSelectElem = document.getElementById('modeSelect');
-            const mode = modeSelectElem ? modeSelectElem.value : 'chinese_to_viet';
+            const inputElem = document.getElementById(`input_${index}`);
+            const rowElem = document.getElementById(`row_${index}`);
+            if (!inputElem || !rowElem) return;
 
-            if (!inputVal.trim()) {
-                if (tr) tr.className = "";
-                return;
-            }
+            const userVal = inputElem.value;
+            const mode = document.getElementById('modeSelect').value;
 
-            const cleanedInput = cleanLoose(inputVal);
             let isCorrect = false;
 
-            const chineseVariants = splitVariants(item.chinese).map(s => cleanLoose(s));
-            const pinyinVariants = splitVariants(item.pinyin).map(s => cleanLoose(s));
-            const meaningVariants = splitVariants(item.meaning).map(s => cleanLoose(s));
-
             if (mode === 'chinese_to_viet') {
-                isCorrect = meaningVariants.some(variant => {
-                    const cleanTarget = cleanLoose(variant);
-                    if (cleanedInput === cleanTarget) return true;
-                    return getSimilarityRatio(cleanedInput, cleanTarget) >= 0.45;
-                });
+                let validVariants = splitVariants(item.meaning);
+                let cleanUser = cleanLoose(userVal);
+                isCorrect = validVariants.some(v => cleanLoose(v) === cleanUser);
             } else if (mode === 'viet_to_chinese') {
-                isCorrect = chineseVariants.includes(cleanedInput) || 
-                            pinyinVariants.includes(cleanedInput) ||
-                            pinyinVariants.some(p => getSimilarityRatio(cleanedInput, p) >= 0.7);
+                let cleanUser = cleanLoose(userVal);
+                let cleanHanzi = cleanLoose(item.chinese);
+                let cleanPinyin = cleanLoose(item.pinyin);
+                let cleanNoTonePinyin = cleanLoose(removePinyinTones(item.pinyin));
+                
+                isCorrect = (cleanUser === cleanHanzi || cleanUser === cleanPinyin || cleanUser === cleanNoTonePinyin);
             } else if (mode === 'listening_mode') {
-                isCorrect = chineseVariants.includes(cleanedInput) || 
-                            pinyinVariants.includes(cleanedInput) ||
-                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanLoose(variant)) >= 0.45);
+                let cleanUser = cleanLoose(userVal);
+                let cleanHanzi = cleanLoose(item.chinese);
+                let cleanPinyin = cleanLoose(item.pinyin);
+                isCorrect = (cleanUser === cleanHanzi || cleanUser === cleanPinyin);
             }
 
-            const chineseSpan = document.getElementById(`chinese_${index}`);
-            const pinyinSpan = document.getElementById(`pinyin_${index}`);
-            const meaningSpan = document.getElementById(`meaning_${index}`);
-            const audioWrapSpan = document.getElementById(`audio_wrap_${index}`);
-
-            if (chineseSpan) chineseSpan.innerText = item.chinese;
-            if (pinyinSpan) pinyinSpan.innerText = item.pinyin;
-            if (meaningSpan) meaningSpan.innerText = item.meaning;
-            if (audioWrapSpan) {
-                audioWrapSpan.innerHTML = `<button class="audio-btn" onclick="speakText('${item.chinese.replace(/'/g, "\\'")}')" title="Nghe">🔊</button>`;
-            }
+            item.userAnswer = userVal;
+            item.isAnswered = true;
+            item.isCorrect = isCorrect;
 
             if (isCorrect) {
-                if (tr) tr.className = 'row-correct';
-                if (mode !== 'listening_mode') speakText(item.chinese);
+                rowElem.className = 'row-correct';
                 removeWrongWord(item);
+                
+                const pinyinCell = document.getElementById(`pinyin_${index}`);
+                const meaningCell = document.getElementById(`meaning_${index}`);
+                if (pinyinCell) pinyinCell.innerText = item.pinyin;
+                if (meaningCell) meaningCell.innerText = item.meaning;
+
+                speakText(item.chinese);
             } else {
-                if (tr) tr.className = 'row-wrong';
+                rowElem.className = 'row-wrong';
                 saveWrongWord(item);
+                
+                const pinyinCell = document.getElementById(`pinyin_${index}`);
+                const meaningCell = document.getElementById(`meaning_${index}`);
+                if (pinyinCell) pinyinCell.innerText = item.pinyin;
+                if (meaningCell) meaningCell.innerText = item.meaning;
             }
 
-            updateStats();
+            updateStatsBar();
+            
+            if (currentQuizData.every(w => w.isAnswered)) {
+                stopTimer();
+            }
         }
 
-        function updateStats() {
+        function updateStatsBar() {
             const total = currentQuizData.length;
-            let done = 0, correct = 0, wrong = 0;
+            let done = 0;
+            let correct = 0;
+            let wrong = 0;
 
-            currentQuizData.forEach((_, index) => {
-                const tr = document.getElementById(`row_${index}`);
-                if (tr && tr.classList.contains('row-correct')) {
-                    done++; correct++;
-                } else if (tr && tr.classList.contains('row-wrong')) {
-                    done++; wrong++;
+            currentQuizData.forEach(item => {
+                if (item.isAnswered) {
+                    done++;
+                    if (item.isCorrect) correct++;
+                    else wrong++;
                 }
             });
 
-            const statTotal = document.getElementById('statTotal');
-            const statDone = document.getElementById('statDone');
-            const statCorrect = document.getElementById('statCorrect');
-            const statWrong = document.getElementById('statWrong');
-            const statRate = document.getElementById('statRate');
-            const progressBar = document.getElementById('progressBar');
+            const rate = done > 0 ? ((correct / done) * 100).toFixed(1) : "0.0";
 
-            if (statTotal) statTotal.innerText = total;
-            if (statDone) statDone.innerText = done;
-            if (statCorrect) statCorrect.innerText = correct;
-            if (statWrong) statWrong.innerText = wrong;
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('statDone').innerText = done;
+            document.getElementById('statCorrect').innerText = correct;
+            document.getElementById('statWrong').innerText = wrong;
+            document.getElementById('statRate').innerText = rate + "%";
 
-            const rate = done > 0 ? ((correct / done) * 100).toFixed(1) : '0.0';
-            if (statRate) statRate.innerText = `${rate}%`;
-
-            const percent = total > 0 ? (done / total) * 100 : 0;
-            if (progressBar) progressBar.style.width = `${percent}%`;
-
-            if (done === total && total > 0) {
-                stopTimer();
-            }
+            const progressPct = total > 0 ? (done / total) * 100 : 0;
+            document.getElementById('progressBar').style.width = progressPct + "%";
+            
+            updateWrongCountBadge();
         }
     </script>
 </body>
