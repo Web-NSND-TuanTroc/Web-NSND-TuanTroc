@@ -155,10 +155,6 @@
             box-shadow: 0 4px 8px rgba(219, 39, 119, 0.3);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
         button.muted {
             background-color: #6b7280;
             box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
@@ -175,13 +171,11 @@
             background-color: #c2410c;
         }
 
-        /* KHUNG CHỨA (Dùng Flexbox để đảo vị trí linh hoạt giữa PC và Điện thoại) */
         .main-content-wrapper {
             display: flex;
             flex-direction: column;
         }
 
-        /* Mặc định trên PC: Thanh thống kê (order: 1) nằm TRÊN Bảng từ vựng (order: 2) */
         .stats-bar {
             order: 1;
             display: flex;
@@ -240,7 +234,6 @@
             padding: 14px 10px;
             text-align: center;
             border-bottom: 2px solid #fbcfe8;
-            letter-spacing: 0.01em;
             white-space: nowrap;
         }
 
@@ -250,7 +243,6 @@
             border-bottom: 1px solid #f3f4f6;
             font-size: 0.92rem;
             word-wrap: break-word;
-            white-space: normal;
             vertical-align: middle;
         }
 
@@ -307,6 +299,7 @@
             display: inline-block;
             transition: background 0.2s;
             box-shadow: none;
+            color: var(--primary-color);
         }
         .audio-btn:hover {
             background: #fbcfe8;
@@ -318,7 +311,6 @@
             font-weight: 600;
         }
 
-        /* RIÊNG TRÊN ĐIỆN THOẠI (DƯỚI 768px): ĐẢO VỊ TRÍ BẢNG LÊN TRÊN, THANH THỐNG KÊ XUỐNG DƯỚI */
         @media screen and (max-width: 768px) {
             body { padding: 8px; }
             .container { padding: 14px 10px; border-radius: 14px; }
@@ -327,7 +319,6 @@
             .control-group { justify-content: space-between; width: 100%; }
             .control-group input[type="file"], .control-group select { flex: 1; max-width: 60%; }
             
-            /* Đảo trật tự trên điện thoại: Bảng từ vựng lên trên (order: 1), Thanh thống kê xuống dưới (order: 2) */
             .table-responsive { order: 1; margin-bottom: 15px; }
             .stats-bar { 
                 order: 2; 
@@ -375,7 +366,7 @@
             <div class="control-group">
                 <label>Kiểu trộn:</label>
                 <select id="shuffleSelect">
-                    <option value="random">Ngẫu nhiên (Fisher-Yates)</option>
+                    <option value="random">Ngẫu nhiên</option>
                     <option value="sequential">Tuần tự</option>
                 </select>
             </div>
@@ -415,9 +406,7 @@
             </div>
         </div>
 
-        <!-- KHUNG BỌC ĐỂ TỰ ĐỘNG ĐẢO VỊ TRÍ TRÊN MÁY TÍNH VÀ ĐIỆN THOẠI -->
         <div class="main-content-wrapper">
-            <!-- Thanh thống kê (Trên PC nằm trên, trên Điện thoại tự động xuống dưới cùng) -->
             <div class="stats-bar">
                 <div>Tổng số: <span id="statTotal">0</span></div>
                 <div>Đã làm: <span id="statDone">0</span></div>
@@ -430,7 +419,6 @@
                 </div>
             </div>
 
-            <!-- Bảng từ vựng -->
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -455,25 +443,17 @@
             container.innerHTML = '';
             const icons = ['🌸', '❄', '🌸', '❆', '🌺'];
             const isMobile = window.innerWidth <= 768;
-            const count = isMobile ? 35 : 80; 
+            const count = isMobile ? 25 : 50; 
             
             const fragment = document.createDocumentFragment();
-
             for (let i = 0; i < count; i++) {
                 const flake = document.createElement('div');
                 flake.className = 'snowflake';
                 flake.innerText = icons[Math.floor(Math.random() * icons.length)];
-                
-                const leftPos = Math.random() * 100;
-                const duration = 7 + Math.random() * 8;
-                const delay = Math.random() * 8;
-                const size = 0.5 + Math.random() * 0.7;
-                
-                flake.style.left = `${leftPos}%`;
-                flake.style.animationDuration = `${duration}s, 4s`;
-                flake.style.animationDelay = `${delay}s, ${delay}s`;
-                flake.style.fontSize = `${size}em`;
-                
+                flake.style.left = `${Math.random() * 100}%`;
+                flake.style.animationDuration = `${7 + Math.random() * 8}s, 4s`;
+                flake.style.animationDelay = `${Math.random() * 8}s`;
+                flake.style.fontSize = `${0.5 + Math.random() * 0.7}em`;
                 fragment.appendChild(flake);
             }
             container.appendChild(fragment);
@@ -482,13 +462,13 @@
 
         const EMBEDDED_VOCAB_DATA = [
             {"chinese": "年", "type": "Danh từ", "pinyin": "nián", "meaning": "Năm"},
-            {"chinese": "今年", "type": "Danh từ chỉ thời gian", "pinyin": "jīnnián", "meaning": "Năm nay"},
-            {"chinese": "明年", "type": "Danh từ chỉ thời gian", "pinyin": "míngnián", "meaning": "Năm sau, sang năm"},
-            {"chinese": "后年", "type": "Danh từ chỉ thời gian", "pinyin": "hòunián", "meaning": "Năm sau nữa"},
-            {"chinese": "去年", "type": "Danh từ chỉ thời gian", "pinyin": "qùnián", "meaning": "Năm ngoái"},
-            {"chinese": "毕业", "type": "Động từ (ly hợp)", "pinyin": "bìyè", "meaning": "Tốt nghiệp"},
-            {"chinese": "多", "type": "Phó từ / Tính từ", "pinyin": "duō", "meaning": "Nhiều, hơn"},
-            {"chinese": "多大", "type": "Cụm từ hỏi", "pinyin": "duōdà", "meaning": "Bao nhiêu tuổi"},
+            {"chinese": "今年", "type": "Danh từ", "pinyin": "jīnnián", "meaning": "Năm nay"},
+            {"chinese": "明年", "type": "Danh từ", "pinyin": "míngnián", "meaning": "Năm sau"},
+            {"chinese": "后年", "type": "Danh từ", "pinyin": "hòunián", "meaning": "Năm sau nữa"},
+            {"chinese": "去年", "type": "Danh từ", "pinyin": "qùnián", "meaning": "Năm ngoái"},
+            {"chinese": "毕业", "type": "Động từ", "pinyin": "bìyè", "meaning": "Tốt nghiệp"},
+            {"chinese": "多", "type": "Phó từ", "pinyin": "duō", "meaning": "Nhiều, hơn"},
+            {"chinese": "多大", "type": "Cụm từ", "pinyin": "duōdà", "meaning": "Bao nhiêu tuổi"},
             {"chinese": "岁", "type": "Lượng từ", "pinyin": "suì", "meaning": "Tuổi"},
             {"chinese": "属", "type": "Động từ", "pinyin": "shǔ", "meaning": "Cầm tinh, thuộc về"}
         ];
@@ -538,21 +518,16 @@
             speechTimeout = setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-CN';
-                
                 const speedSelectElem = document.getElementById('speedSelect');
                 utterance.rate = speedSelectElem ? parseFloat(speedSelectElem.value) : 1.0;
-
                 window.speechSynthesis.speak(utterance);
             }, 50);
         }
 
-        /* --- QUẢN LÝ SỔ TỪ SAI --- */
         function getWrongWords() {
             try {
                 return JSON.parse(localStorage.getItem('wrong_words')) || [];
-            } catch(e) {
-                return [];
-            }
+            } catch(e) { return []; }
         }
 
         function saveWrongWord(item) {
@@ -585,25 +560,13 @@
                       .toLowerCase();
         }
 
-        function normalizeVietnamese(str) {
-            if (!str) return '';
-            let s = str.normalize('NFC').toLowerCase();
-            s = s.replace(/hoả/g, 'hỏa').replace(/hoà/g, 'hòa').replace(/hoá/g, 'hóa')
-                 .replace(/thuỷ/g, 'thủy').replace(/thuý/g, 'thúy');
-            return s;
-        }
-
         function cleanString(str) {
             if (!str) return '';
             let noBracket = str.replace(/\([^)]*\)/g, '')
                                .replace(/（[^）]*）/g, '')
                                .replace(/\[[^\]]*\]/g, '')
                                .replace(/【[^】]*】/g, '');
-            
-            let cleaned = noBracket.normalize('NFC').toLowerCase()
-                                   .replace(/[？，！\?,\.!:;""''`~]/g, '') 
-                                   .trim().replace(/\s+/g, ' ');
-            return normalizeVietnamese(cleaned);
+            return noBracket.normalize('NFC').toLowerCase().trim();
         }
 
         function splitVariants(str) {
@@ -612,9 +575,19 @@
                                .replace(/（[^）]*）/g, '')
                                .replace(/\[[^\]]*\]/g, '')
                                .replace(/【[^】]*】/g, '');
-            return noBracket.split(/[/,;|\n]+/)
-                            .map(s => cleanString(s))
-                            .filter(s => s.length > 0);
+            let rawParts = noBracket.split(/[/,;|\n]+/);
+            let variants = [];
+            rawParts.forEach(part => {
+                let cleaned = cleanString(part);
+                if (cleaned) {
+                    variants.push(cleaned);
+                    let noTone = removePinyinTones(cleaned);
+                    if (noTone && !variants.includes(noTone)) {
+                        variants.push(noTone);
+                    }
+                }
+            });
+            return variants;
         }
 
         function autoExpandInput(textarea) {
@@ -637,17 +610,11 @@
             const rangeToElem = document.getElementById('rangeTo');
             if (rangeToElem) rangeToElem.value = fullVocabData.length;
             
-            const btnNewQuiz = document.getElementById('btnNewQuiz');
-            const btnRetryQuiz = document.getElementById('btnRetryQuiz');
-            const btnReviewWrong = document.getElementById('btnReviewWrong');
-            const btnReset = document.getElementById('btnReset');
-            const modeSelectElem = document.getElementById('modeSelect');
-
-            if (btnNewQuiz) btnNewQuiz.addEventListener('click', startNewQuiz);
-            if (btnRetryQuiz) btnRetryQuiz.addEventListener('click', retryCurrentQuiz);
-            if (btnReviewWrong) btnReviewWrong.addEventListener('click', startWrongWordsQuiz);
-            if (btnReset) btnReset.addEventListener('click', resetAllData);
-            if (modeSelectElem) modeSelectElem.addEventListener('change', startNewQuiz);
+            document.getElementById('btnNewQuiz').addEventListener('click', startNewQuiz);
+            document.getElementById('btnRetryQuiz').addEventListener('click', retryCurrentQuiz);
+            document.getElementById('btnReviewWrong').addEventListener('click', startWrongWordsQuiz);
+            document.getElementById('btnReset').addEventListener('click', resetAllData);
+            document.getElementById('modeSelect').addEventListener('change', startNewQuiz);
 
             updateWrongCountBadge();
             startNewQuiz();
@@ -684,7 +651,6 @@
             timerDisplay.innerText = `${mins}:${secs}`;
         }
 
-        // ĐỌC FILE EXCEL & KIỂM TRA MÃ Z1
         const excelFileElem = document.getElementById('excelFile');
         if (excelFileElem) {
             excelFileElem.addEventListener('change', function(e) {
@@ -703,22 +669,16 @@
 
                         const cellZ1 = worksheet['Z1'] ? worksheet['Z1'].v.toString().trim() : '';
                         if (cellZ1 !== SECRET_Z1_KEY) {
-                            alert("Bản quyền file không hợp lệ hoặc sai mã xác thực. Vui lòng liên hệ Admin để được hỗ trợ!");
+                            alert("Bản quyền file không hợp lệ hoặc sai mã xác thực!");
                             if (statusText) { statusText.innerText = "❌ Sai mã xác thực bản quyền!"; statusText.style.color = "#dc2626"; }
                             return;
                         }
 
                         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-
-                        if (!rows || rows.length === 0) {
-                            alert("File Excel trống!");
-                            return;
-                        }
-
                         let headerRowIndex = 0;
                         for (let i = 0; i < Math.min(rows.length, 5); i++) {
                             const rowStr = rows[i].join(" ").toUpperCase();
-                            if (rowStr.includes("HÁN") || rowStr.includes("CHINESE") || rowStr.includes("PINYIN") || rowStr.includes("NGHĨA") || rowStr.includes("TIẾNG VIỆT")) {
+                            if (rowStr.includes("HÁN") || rowStr.includes("CHINESE") || rowStr.includes("PINYIN") || rowStr.includes("NGHĨA")) {
                                 headerRowIndex = i;
                                 break;
                             }
@@ -754,7 +714,6 @@
                         document.getElementById('rangeFrom').value = 1;
                         document.getElementById('rangeTo').value = fullVocabData.length;
                         sequentialOffset = 0;
-                        
                         startNewQuiz();
                     } catch (err) { alert("Lỗi khi đọc file Excel: " + err.message); }
                 };
@@ -779,11 +738,7 @@
             document.getElementById('rangeTo').value = toIdx;
 
             const slicedData = fullVocabData.slice(fromIdx - 1, toIdx);
-
-            if (slicedData.length === 0) {
-                alert("Khoảng câu chọn không hợp lệ!");
-                return;
-            }
+            if (slicedData.length === 0) return;
 
             let processedData = [];
             if (shuffleMode === 'random') {
@@ -810,9 +765,6 @@
             resetTimer();
             renderTable();
         }
-
-        const shuffleSelectElem = document.getElementById('shuffleSelect');
-        if (shuffleSelectElem) shuffleSelectElem.addEventListener('change', function() { sequentialOffset = 0; });
 
         function retryCurrentQuiz() { 
             if (currentQuizData.length > 0) {
@@ -846,7 +798,7 @@
             currentQuizData.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.id = `row_${index}`;
-                
+
                 let displayChinese = item.chinese; 
                 let displayPinyin  = '***';
                 let displayMeaning = '***';
@@ -874,12 +826,12 @@
                     <td id="meaning_${index}" class="col-viet">${displayMeaning}</td>
                     <td class="col-input">
                         <textarea id="input_${index}" 
-                                  rows="1"
-                                  enterkeyhint="next" 
-                                  autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-                                  oninput="checkAndStartTimer(); autoExpandInput(this);"
-                                  onblur="checkAnswer(${index})"
-                                  onkeydown="handleKeyDown(event, ${index})"></textarea>
+                                rows="1"
+                                enterkeyhint="next" 
+                                autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+                                oninput="checkAndStartTimer(); autoExpandInput(this);"
+                                onblur="checkAnswer(${index})"
+                                onkeydown="handleKeyDown(event, ${index})"></textarea>
                     </td>
                 `;
 
@@ -895,7 +847,6 @@
 
             updateStats();
 
-            // Tự động đọc từ đầu tiên khi ở chế độ Luyện Nghe & focus ô input
             if (currentQuizData.length > 0) {
                 const firstInput = document.getElementById('input_0');
                 if (firstInput) firstInput.focus();
@@ -911,7 +862,6 @@
             const modeSelectElem = document.getElementById('modeSelect');
             const mode = modeSelectElem ? modeSelectElem.value : 'chinese_to_viet';
 
-            // PHÍM TẮT NGHE LẠI NHANH (Ctrl hoặc Space khi ô nhập trống)
             if (event.key === 'Control' || (event.code === 'Space' && inputElem && inputElem.value.trim() === '')) {
                 if (event.code === 'Space') event.preventDefault();
                 speakText(currentQuizData[index].chinese);
@@ -927,7 +877,6 @@
                 if (nextInput) {
                     nextInput.focus();
                     nextInput.select();
-                    // TỰ ĐỘNG PHÁT ÂM CÂU TIẾP THEO Ở CHẾ ĐỘ LUYỆN NGHE
                     if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
                         speakText(currentQuizData[nextIndex].chinese);
                     }
@@ -951,16 +900,10 @@
             for (let j = 1; j <= len2; j += 1) {
                 for (let i = 1; i <= len1; i += 1) {
                     const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
-                    track[j][i] = Math.min(
-                        track[j][i - 1] + 1, 
-                        track[j - 1][i] + 1, 
-                        track[j - 1][i - 1] + indicator 
-                    );
+                    track[j][i] = Math.min(track[j][i - 1] + 1, track[j - 1][i] + 1, track[j - 1][i - 1] + indicator);
                 }
             }
-            const distance = track[len2][len1];
-            const maxLen = Math.max(len1, len2);
-            return (maxLen - distance) / maxLen;
+            return (Math.max(len1, len2) - track[len2][len1]) / Math.max(len1, len2);
         }
 
         function checkAnswer(index) {
@@ -978,66 +921,38 @@
                 return;
             }
 
-            const cleanedInput = cleanString(inputVal);
+            function cleanLoose(str) {
+                if (!str) return '';
+                return str.toString()
+                          .normalize('NFD')
+                          .replace(/[\u0300-\u036f]/g, '')
+                          .toLowerCase()
+                          .replace(/[,\.\?!;:"'`~()\[\]{}–—\/\\-_|~]/g, ' ')
+                          .replace(/\s+/g, ' ')
+                          .trim();
+            }
+
+            const cleanedInput = cleanLoose(inputVal);
             let isCorrect = false;
 
-            const chineseVariants = splitVariants(item.chinese);
-            const pinyinVariants = splitVariants(item.pinyin);
-            const rawPinyinVariants = pinyinVariants.map(p => removePinyinTones(p));
-            const cleanInputNoTone = removePinyinTones(cleanedInput);
-            const meaningVariants = splitVariants(item.meaning);
+            const chineseVariants = splitVariants(item.chinese).map(s => cleanLoose(s));
+            const pinyinVariants = splitVariants(item.pinyin).map(s => cleanLoose(s));
+            const meaningVariants = splitVariants(item.meaning).map(s => cleanLoose(s));
 
             if (mode === 'chinese_to_viet') {
                 isCorrect = meaningVariants.some(variant => {
-                    const cleanTarget = cleanString(variant);
+                    const cleanTarget = cleanLoose(variant);
                     if (cleanedInput === cleanTarget) return true;
-
-                    const subVariants = variant.split(/[/,;|\n]+/).map(s => cleanString(s));
-                    if (subVariants.includes(cleanedInput)) return true;
-
-                    let userText = " " + cleanedInput + " ";
-                    let targetText = " " + cleanTarget + " ";
-
-                    const fillerWords = [" là ", " có ", " được ", " thì ", " của "];
-                    fillerWords.forEach(word => {
-                        userText = userText.replaceAll(word, " ");
-                        targetText = targetText.replaceAll(word, " ");
-                    });
-
-                    const synonyms = [
-                        ["bây giờ", "hiện tại"], ["định", "muốn", "tính"],
-                        ["tệ", "nghìn", "đồng", "k"], ["ngày mai", "mai"],
-                        ["hôm nay", "nay"], ["thời tiết", "trời"]
-                    ];
-                    synonyms.forEach(group => {
-                        const mainWord = group[0];
-                        for (let i = 1; i < group.length; i++) {
-                            const subWord = group[i];
-                            if (subWord) {
-                                userText = userText.replaceAll(subWord, mainWord);
-                                targetText = targetText.replaceAll(subWord, mainWord);
-                            }
-                        }
-                    });
-
-                    userText = userText.replace(/\s+/g, ' ').trim();
-                    targetText = targetText.replace(/\s+/g, ' ').trim();
-
-                    if (userText === targetText) return true;
-
-                    const similarity = getSimilarityRatio(userText, targetText);
-                    return similarity >= 0.55;
+                    return getSimilarityRatio(cleanedInput, cleanTarget) >= 0.45;
                 });
-
             } else if (mode === 'viet_to_chinese') {
                 isCorrect = chineseVariants.includes(cleanedInput) || 
-                            pinyinVariants.includes(cleanedInput) || 
-                            rawPinyinVariants.includes(cleanInputNoTone);
+                            pinyinVariants.includes(cleanedInput) ||
+                            pinyinVariants.some(p => getSimilarityRatio(cleanedInput, p) >= 0.7);
             } else if (mode === 'listening_mode') {
                 isCorrect = chineseVariants.includes(cleanedInput) || 
-                            pinyinVariants.includes(cleanedInput) || 
-                            rawPinyinVariants.includes(cleanInputNoTone) ||
-                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanString(variant)) >= 0.55);
+                            pinyinVariants.includes(cleanedInput) ||
+                            meaningVariants.some(variant => getSimilarityRatio(cleanedInput, cleanLoose(variant)) >= 0.45);
             }
 
             const chineseSpan = document.getElementById(`chinese_${index}`);
@@ -1066,18 +981,14 @@
 
         function updateStats() {
             const total = currentQuizData.length;
-            let done = 0;
-            let correct = 0;
-            let wrong = 0;
+            let done = 0, correct = 0, wrong = 0;
 
             currentQuizData.forEach((_, index) => {
                 const tr = document.getElementById(`row_${index}`);
-                if (tr && (tr.classList.contains('row-correct') || tr.className.includes('row-correct'))) {
-                    done++;
-                    correct++;
-                } else if (tr && (tr.classList.contains('row-wrong') || tr.className.includes('row-wrong'))) {
-                    done++;
-                    wrong++;
+                if (tr && tr.classList.contains('row-correct')) {
+                    done++; correct++;
+                } else if (tr && tr.classList.contains('row-wrong')) {
+                    done++; wrong++;
                 }
             });
 
