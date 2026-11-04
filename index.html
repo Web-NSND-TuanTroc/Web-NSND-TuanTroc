@@ -841,7 +841,6 @@
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
                                 oninput="checkAndStartTimer(); autoExpandInput(this);"
-                                onblur="checkAnswer(${index})"
                                 onkeydown="handleKeyDown(event, ${index})"></textarea>
                     </td>
                 `;
@@ -879,9 +878,11 @@
                 return;
             }
 
-            if (event.key === 'Enter' || event.keyCode === 13) {
+            // Bắt sự kiện Enter cực chuẩn: Dù đúng hay sai, cứ Enter là chấm và nhảy câu ngay lập tức
+            if (event.key === 'Enter' || event.keyCode === 13 || event.code === 'Enter') {
                 event.preventDefault();
                 event.stopPropagation();
+                event.stopImmediatePropagation();
 
                 checkAnswer(index); 
                 
