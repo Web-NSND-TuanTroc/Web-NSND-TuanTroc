@@ -840,34 +840,37 @@
                                 rows="1"
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-                                oninput="autoExpandInput(this)"
-                                onkeydown="handleKeyEnter(event, ${index})"
                                 placeholder="Gõ pinyin / nghĩa..."></textarea>
                     </td>
                 `;
                 tbody.appendChild(tr);
                 
+                // Gắn sự kiện lắng nghe bàn phím trực tiếp
                 const textareaElem = document.getElementById(`input_${index}`);
                 if (textareaElem) {
                     autoExpandInput(textareaElem);
+                    
+                    textareaElem.addEventListener('input', function() {
+                        autoExpandInput(this);
+                    });
+
+                    textareaElem.addEventListener('keydown', function(event) {
+                        if (event.key === 'Enter') {
+                            event.preventDefault(); // Chặn xuống dòng mặc định của textarea
+                            checkAnswer(index);      // Kiểm tra đáp án câu hiện tại
+                            
+                            // Tự động nhảy sang ô input của câu tiếp theo mượt mà
+                            const nextInput = document.getElementById(`input_${index + 1}`);
+                            if (nextInput) {
+                                nextInput.focus();
+                                nextInput.select();
+                            }
+                        }
+                    });
                 }
             });
             
             updateStatsBar();
-        }
-
-        // Xử lý khi ấn Enter: chặn xuống dòng, check đáp án và nhảy sang ô tiếp theo mượt mà
-        function handleKeyEnter(event, index) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); 
-                checkAnswer(index);
-                
-                const nextInput = document.getElementById(`input_${index + 1}`);
-                if (nextInput) {
-                    nextInput.focus();
-                    nextInput.select();
-                }
-            }
         }
 
         function checkAnswer(index) {
