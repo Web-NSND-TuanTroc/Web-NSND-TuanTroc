@@ -264,21 +264,24 @@
         td.col-pinyin { color: #4b5563; font-weight: 500; }
         td.col-viet { color: #1f2937; font-weight: 500; }
 
-        .col-input input[type="text"] { 
+        .col-input textarea { 
             width: 100%;
-            height: 38px;
-            padding: 6px 10px;
+            min-height: 40px;
+            padding: 8px 10px;
             border: 1.5px solid #d1d5db;
             border-radius: 8px;
             text-align: center;
             font-size: 0.92rem;
+            resize: none;
+            overflow: hidden;
             font-family: inherit;
+            line-height: 1.35;
             display: block;
             background-color: #fafafa;
             transition: all 0.2s;
         }
 
-        .col-input input[type="text"]:focus {
+        .col-input textarea:focus {
             border-color: var(--primary-color);
             background-color: #fff;
             box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
@@ -331,10 +334,10 @@
             td.col-pinyin { font-size: 0.82rem; }
             td.col-viet { font-size: 0.85rem; }
             
-            .col-input input[type="text"] { 
+            .col-input textarea { 
                 padding: 6px 4px; 
                 font-size: 16px !important;
-                height: 36px;
+                min-height: 38px;
             }
             .audio-btn { font-size: 0.9rem; padding: 1px 2px; }
         }
@@ -372,7 +375,7 @@
                 <label>Chế độ:</label>
                 <select id="modeSelect">
                     <option value="chinese_to_viet">Hán Tự ➔ Gõ Nghĩa TV</option>
-                    <option value="viet_to_chinese" selected>Nghĩa TV ➔ Gõ Hán/Pinyin</option>
+                    <option value="viet_to_chinese">Nghĩa TV ➔ Gõ Hán/Pinyin</option>
                     <option value="listening_mode">🔊 Luyện Nghe ➔ Gõ Từ</option>
                 </select>
             </div>
@@ -596,6 +599,11 @@
                 }
             });
             return variants;
+        }
+
+        function autoExpandInput(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
         }
 
         window.onload = function() {
@@ -828,11 +836,12 @@
                     <td id="pinyin_${index}" class="col-pinyin">${displayPinyin}</td>
                     <td id="meaning_${index}" class="col-viet">${displayMeaning}</td>
                     <td class="col-input">
-                        <input type="text" id="input_${index}" 
+                        <textarea id="input_${index}" 
+                                rows="1"
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-                                oninput="checkAndStartTimer();"
-                                onkeydown="handleInputKey(event, ${index}, '${mode}')">
+                                oninput="checkAndStartTimer(); autoExpandInput(this);"
+                                onblur="checkAnswer(${index});"></textarea>
                     </td>
                 `;
 
@@ -853,24 +862,6 @@
                 if (firstInput) firstInput.focus();
                 if (mode === 'listening_mode') {
                     speakText(currentQuizData[0].chinese);
-                }
-            }
-        }
-
-        // Lệnh xử lý phím đơn giản, không bị kén trình duyệt
-        function handleInputKey(event, index, mode) {
-            if (event.key === 'Enter' || event.keyCode === 13) {
-                event.preventDefault(); // Chặn hành vi mặc định
-                checkAnswer(index);     // Chấm điểm ngay lập tức
-
-                const nextIndex = index + 1;
-                const nextInput = document.getElementById(`input_${nextIndex}`);
-                if (nextInput) {
-                    nextInput.focus();
-                    nextInput.select();
-                    if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
-                        speakText(currentQuizData[nextIndex].chinese);
-                    }
                 }
             }
         }
