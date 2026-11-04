@@ -832,7 +832,8 @@
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
                                 oninput="checkAndStartTimer();"
-                                onkeydown="handleKeyDown(event, ${index})">
+                                onkeypress="if(event.key === 'Enter') { jumpToNext(${index}, '${mode}'); }"
+                                onchange="checkAnswer(${index});">
                     </td>
                 `;
 
@@ -857,34 +858,9 @@
             }
         }
 
-        function handleKeyDown(event, index) {
-            checkAndStartTimer();
-            const inputElem = document.getElementById(`input_${index}`);
-            const modeSelectElem = document.getElementById('modeSelect');
-            const mode = modeSelectElem ? modeSelectElem.value : 'chinese_to_viet';
-
-            if (event.key === 'Control' || (event.code === 'Space' && inputElem && inputElem.value.trim() === '')) {
-                if (event.code === 'Space') event.preventDefault();
-                speakText(currentQuizData[index].chinese);
-                return;
-            }
-
-            // Bắt sự kiện Enter bất kể trạng thái gõ (xử lý cả IME gõ tiếng Trung)
-            if (event.key === 'Enter' || event.keyCode === 13 || event.code === 'Enter') {
-                if (event.isComposing || event.keyCode === 229) {
-                    setTimeout(() => {
-                        jumpNextRow(index, mode);
-                    }, 50);
-                } else {
-                    event.preventDefault();
-                    jumpNextRow(index, mode);
-                }
-            }
-        }
-
-        function jumpNextRow(index, mode) {
-            checkAnswer(index); 
-            const nextIndex = index + 1;
+        function jumpToNext(currentIndex, mode) {
+            checkAnswer(currentIndex);
+            const nextIndex = currentIndex + 1;
             const nextInput = document.getElementById(`input_${nextIndex}`);
             if (nextInput) {
                 nextInput.focus();
