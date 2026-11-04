@@ -878,7 +878,7 @@
                 return;
             }
 
-            // Bắt sự kiện Enter cực chuẩn: Dù đúng hay sai, cứ Enter là chấm và nhảy câu ngay lập tức
+            // Bắt phím Enter chuẩn xác: Chấm điểm và nhảy xuống dòng ngay lập tức
             if (event.key === 'Enter' || event.keyCode === 13 || event.code === 'Enter') {
                 event.preventDefault();
                 event.stopPropagation();
