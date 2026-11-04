@@ -832,8 +832,7 @@
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
                                 oninput="checkAndStartTimer();"
-                                onkeydown="if(event.keyCode === 13 || event.key === 'Enter') { event.preventDefault(); jumpToNext(${index}, '${mode}'); }"
-                                onchange="checkAnswer(${index});">
+                                onkeydown="handleInputKey(event, ${index}, '${mode}')">
                     </td>
                 `;
 
@@ -858,15 +857,20 @@
             }
         }
 
-        function jumpToNext(currentIndex, mode) {
-            checkAnswer(currentIndex);
-            const nextIndex = currentIndex + 1;
-            const nextInput = document.getElementById(`input_${nextIndex}`);
-            if (nextInput) {
-                nextInput.focus();
-                nextInput.select();
-                if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
-                    speakText(currentQuizData[nextIndex].chinese);
+        // Lệnh xử lý phím đơn giản, không bị kén trình duyệt
+        function handleInputKey(event, index, mode) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault(); // Chặn hành vi mặc định
+                checkAnswer(index);     // Chấm điểm ngay lập tức
+
+                const nextIndex = index + 1;
+                const nextInput = document.getElementById(`input_${nextIndex}`);
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                    if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
+                        speakText(currentQuizData[nextIndex].chinese);
+                    }
                 }
             }
         }
