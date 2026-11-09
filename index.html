@@ -264,16 +264,17 @@
         td.col-pinyin { color: #4b5563; font-weight: 500; }
         td.col-viet { color: #1f2937; font-weight: 500; }
 
-        /* Ô nhập đáp án rộng rãi, không bị che khuất chữ dài */
+        /* TỐI ƯU CẢ TRÊN PC VÀ ĐIỆN THOẠI: Phóng to chữ và mở rộng khung đáp án cho cân đối với cột Hán Tự */
         .col-input textarea { 
             width: 100%;
-            min-height: 42px;
-            max-height: 120px;
-            padding: 8px 10px;
+            min-height: 54px;
+            max-height: 140px;
+            padding: 10px 12px;
             border: 1.5px solid #d1d5db;
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: left;
-            font-size: 0.92rem;
+            font-size: 1.15rem; /* Tăng cỡ chữ để tương đương Hán Tự */
+            font-weight: 500;
             font-family: inherit;
             display: block;
             background-color: #fafafa;
@@ -281,6 +282,7 @@
             resize: vertical;
             white-space: pre-wrap;
             word-break: break-word;
+            line-height: 1.4;
         }
 
         .col-input textarea:focus {
@@ -313,6 +315,7 @@
             font-weight: 600;
         }
 
+        /* Giao diện riêng cho Điện thoại */
         @media screen and (max-width: 768px) {
             body { padding: 8px; }
             .container { padding: 14px 10px; border-radius: 14px; }
@@ -332,14 +335,15 @@
             table { font-size: 0.88rem; table-layout: auto; }
             th, td { padding: 8px 4px; }
             .col-stt { width: 38px; font-size: 0.8rem; }
-            td.col-hanzi span { font-size: 1.05rem; }
-            td.col-pinyin { font-size: 0.82rem; }
-            td.col-viet { font-size: 0.85rem; }
+            td.col-hanzi span { font-size: 1.1rem; }
+            td.col-pinyin { font-size: 0.85rem; }
+            td.col-viet { font-size: 0.88rem; }
             
+            /* Tăng kích thước ô nhập trên điện thoại để chữ to rõ ràng */
             .col-input textarea { 
-                padding: 6px 6px; 
-                font-size: 16px !important;
-                min-height: 40px;
+                padding: 8px 8px; 
+                font-size: 1.1rem !important;
+                min-height: 50px;
             }
             .audio-btn { font-size: 0.9rem; padding: 1px 2px; }
         }
@@ -519,7 +523,7 @@
 
             speechTimeout = setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-CN'; // Tự động lấy giọng chuẩn phổ thông mặc định chất lượng cao của hệ thống
+                utterance.lang = 'zh-CN';
                 
                 const speedSelectElem = document.getElementById('speedSelect');
                 utterance.rate = speedSelectElem ? parseFloat(speedSelectElem.value) : 1.0;
