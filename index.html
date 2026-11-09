@@ -238,7 +238,7 @@
         }
 
         td {
-            padding: 12px 10px;
+            padding: 14px 10px;
             text-align: center;
             border-bottom: 1px solid #f3f4f6;
             font-size: 0.92rem;
@@ -264,17 +264,17 @@
         td.col-pinyin { color: #4b5563; font-weight: 500; }
         td.col-viet { color: #1f2937; font-weight: 500; }
 
-        /* TỐI ƯU CẢ TRÊN PC VÀ ĐIỆN THOẠI: Phóng to chữ và mở rộng khung đáp án cho cân đối với cột Hán Tự */
+        /* ĐÃ ĐIỀU CHỈNH: Khung nhập to, cao, cân đối hoàn hảo với cột Hán Tự trên máy tính */
         .col-input textarea { 
             width: 100%;
-            min-height: 54px;
-            max-height: 140px;
-            padding: 10px 12px;
+            min-height: 65px; /* Tăng chiều cao tối thiểu */
+            max-height: 160px;
+            padding: 12px 14px; /* Tăng khoảng đệm trong */
             border: 1.5px solid #d1d5db;
             border-radius: 10px;
             text-align: left;
-            font-size: 1.15rem; /* Tăng cỡ chữ để tương đương Hán Tự */
-            font-weight: 500;
+            font-size: 1.2rem; /* Cỡ chữ bằng với cột Hán Tự (1.25rem ~ 1.2rem) */
+            font-weight: 600;
             font-family: inherit;
             display: block;
             background-color: #fafafa;
@@ -315,7 +315,7 @@
             font-weight: 600;
         }
 
-        /* Giao diện riêng cho Điện thoại */
+        /* Giao diện tối ưu cân đối riêng cho Điện thoại */
         @media screen and (max-width: 768px) {
             body { padding: 8px; }
             .container { padding: 14px 10px; border-radius: 14px; }
@@ -333,17 +333,17 @@
             }
 
             table { font-size: 0.88rem; table-layout: auto; }
-            th, td { padding: 8px 4px; }
+            th, td { padding: 10px 6px; }
             .col-stt { width: 38px; font-size: 0.8rem; }
-            td.col-hanzi span { font-size: 1.1rem; }
+            td.col-hanzi span { font-size: 1.15rem; }
             td.col-pinyin { font-size: 0.85rem; }
             td.col-viet { font-size: 0.88rem; }
             
-            /* Tăng kích thước ô nhập trên điện thoại để chữ to rõ ràng */
+            /* Tăng kích thước ô nhập trên điện thoại cho cân đối với chữ Hán */
             .col-input textarea { 
-                padding: 8px 8px; 
-                font-size: 1.1rem !important;
-                min-height: 50px;
+                padding: 10px 10px; 
+                font-size: 1.15rem !important;
+                min-height: 58px;
             }
             .audio-btn { font-size: 0.9rem; padding: 1px 2px; }
         }
