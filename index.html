@@ -264,23 +264,24 @@
         td.col-pinyin { color: #4b5563; font-weight: 500; }
         td.col-viet { color: #1f2937; font-weight: 500; }
 
-        /* KHẮC PHỤC: Bỏ khung bo tròn lủng củng, chuyển thành ô nhập liền mạch, phẳng phiu, cân đối */
+        /* ĐÃ SỬA: Bỏ hoàn toàn thanh cuộn và cho phép textarea mở rộng tự do theo độ dài câu */
         .col-input textarea { 
             width: 100%;
-            min-height: 55px;
-            max-height: 160px;
-            padding: 10px 12px;
+            height: auto;
+            min-height: 40px;
+            padding: 6px 8px;
             border: none;
-            border-bottom: 2px solid #cbd5e1; /* Chỉ có đường gạch chân tinh tế */
+            border-bottom: 2px solid #cbd5e1;
             border-radius: 0;
             text-align: left;
-            font-size: 1.2rem; /* Cỡ chữ cân xứng hoàn hảo với cột Hán Tự */
-            font-weight: 600;
+            font-size: 1.25rem; /* Bằng chính xác cỡ chữ cột Hán Tự */
+            font-weight: 700;
             font-family: inherit;
             display: block;
-            background-color: transparent; /* Nền trong suốt tệp với bảng */
-            transition: all 0.2s;
-            resize: vertical;
+            background-color: transparent;
+            transition: border-color 0.2s;
+            resize: none; /* Bỏ nút kéo góc */
+            overflow: hidden; /* Bỏ hoàn toàn thanh cuộn */
             white-space: pre-wrap;
             word-break: break-word;
             line-height: 1.4;
@@ -316,7 +317,6 @@
             font-weight: 600;
         }
 
-        /* Giao diện tối ưu cân đối cho Điện thoại */
         @media screen and (max-width: 768px) {
             body { padding: 8px; }
             .container { padding: 14px 10px; border-radius: 14px; }
@@ -341,9 +341,8 @@
             td.col-viet { font-size: 0.88rem; }
             
             .col-input textarea { 
-                padding: 8px 6px; 
+                padding: 6px 4px; 
                 font-size: 1.15rem !important;
-                min-height: 50px;
             }
             .audio-btn { font-size: 0.9rem; padding: 1px 2px; }
         }
@@ -488,6 +487,13 @@
         let isTimerRunning = false;
         let sequentialOffset = 0;
         let isAudioEnabled = true;
+
+        // Hàm tự động co giãn chiều cao của ô nhập đáp án theo độ dài nội dung
+        function autoResizeTextarea(elem) {
+            if (!elem) return;
+            elem.style.height = 'auto';
+            elem.style.height = elem.scrollHeight + 'px';
+        }
 
         function fisherYatesShuffle(array) {
             const arr = [...array];
@@ -839,9 +845,10 @@
                     <td id="meaning_${index}" class="col-viet">${displayMeaning}</td>
                     <td class="col-input">
                         <textarea id="input_${index}" 
+                                rows="1"
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-                                oninput="checkAndStartTimer();"
+                                oninput="checkAndStartTimer(); autoResizeTextarea(this);"
                                 onkeydown="handleInputEnter(event, ${index}, '${mode}')"></textarea>
                     </td>
                 `;
@@ -860,7 +867,10 @@
 
             if (currentQuizData.length > 0) {
                 const firstInput = document.getElementById('input_0');
-                if (firstInput) firstInput.focus();
+                if (firstInput) {
+                    firstInput.focus();
+                    autoResizeTextarea(firstInput);
+                }
                 if (mode === 'listening_mode') {
                     speakText(currentQuizData[0].chinese);
                 }
@@ -881,6 +891,7 @@
                 const nextInput = document.getElementById(`input_${nextIndex}`);
                 if (nextInput) {
                     nextInput.focus();
+                    autoResizeTextarea(nextInput);
                     nextInput.select();
                     if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
                         speakText(currentQuizData[nextIndex].chinese);
@@ -970,6 +981,7 @@
                 saveWrongWord(item);
             }
 
+            autoResizeTextarea(inputElem);
             updateStats();
         }
 
