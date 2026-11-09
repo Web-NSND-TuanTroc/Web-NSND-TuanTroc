@@ -264,7 +264,7 @@
         td.col-pinyin { color: #4b5563; font-weight: 500; }
         td.col-viet { color: #1f2937; font-weight: 500; }
 
-        /* NÂNG CẤP: Chuyển ô input thành textarea tự động mở rộng và hỗ trợ xuống dòng/hiển thị rõ chữ dài */
+        /* Ô nhập đáp án: dạng textarea rộng rãi, tự co giãn, hiển thị rõ mọi chữ dài */
         .col-input textarea { 
             width: 100%;
             min-height: 42px;
@@ -367,7 +367,6 @@
 
             <div class="control-group">
                 <label>Kiểu trộn:</label>
-                <!-- ĐÃ SỬA: Mặc định chọn Tuần tự (sequential) khi khởi động -->
                 <select id="shuffleSelect">
                     <option value="sequential" selected>Tuần tự</option>
                     <option value="random">Ngẫu nhiên</option>
@@ -864,30 +863,24 @@
         }
 
         function handleInputEnter(event, currentIndex, mode) {
-            // Trên máy tính/điện thoại dùng textarea, khi bấm Enter sẽ xuống dòng. 
-            // Nếu muốn bấm Enter để chấm điểm và chuyển câu, ta dùng tổ hợp Ctrl + Enter hoặc giữ nguyên tùy bạn. 
-            // Ở đây mình để: Bấm Enter bình thường sẽ xuống dòng, còn khi bạn gõ xong muốn nộp bài có thể bấm nút tiếp theo hoặc dùng phím tắt. 
-            // Tuy nhiên nếu bạn vẫn muốn bấm Enter là nộp bài luôn như cũ thì báo mình điều chỉnh lại nhé!
-            if (event.ctrlKey && event.key === 'Enter') {
+            // Cho phép phím Enter nộp bài và chuyển câu bình thường trên cả máy tính lẫn điện thoại
+            if (event.key === 'Enter' || event.keyCode === 13) {
                 event.preventDefault();
-                submitAnswerAndNext(currentIndex, mode);
-            }
-        }
+                
+                try {
+                    checkAnswer(currentIndex);
+                } catch (e) {
+                    console.error("Lỗi khi chấm điểm:", e);
+                }
 
-        function submitAnswerAndNext(currentIndex, mode) {
-            try {
-                checkAnswer(currentIndex);
-            } catch (e) {
-                console.error("Lỗi khi chấm điểm:", e);
-            }
-
-            const nextIndex = currentIndex + 1;
-            const nextInput = document.getElementById(`input_${nextIndex}`);
-            if (nextInput) {
-                nextInput.focus();
-                nextInput.select();
-                if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
-                    speakText(currentQuizData[nextIndex].chinese);
+                const nextIndex = currentIndex + 1;
+                const nextInput = document.getElementById(`input_${nextIndex}`);
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                    if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
+                        speakText(currentQuizData[nextIndex].chinese);
+                    }
                 }
             }
         }
@@ -966,7 +959,7 @@
 
             if (isCorrect) {
                 if (tr) tr.className = 'row-correct';
-                if (mode !== 'listening_mode') speakText(item.chinese);
+                if (mode !== 'listening_mode') speakTest(item.chinese);
                 removeWrongWord(item);
             } else {
                 if (tr) tr.className = 'row-wrong';
