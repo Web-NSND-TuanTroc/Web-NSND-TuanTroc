@@ -391,6 +391,14 @@
                 </select>
             </div>
 
+            <!-- BỔ SUNG: Menu chọn giọng đọc -->
+            <div class="control-group">
+                <label>Giọng đọc:</label>
+                <select id="voiceSelect">
+                    <option value="">(Mặc định hệ thống)</option>
+                </select>
+            </div>
+
             <div class="control-group">
                 <button id="btnAudioToggle">🔊 Âm thanh</button>
             </div>
@@ -484,6 +492,31 @@
         let isTimerRunning = false;
         let sequentialOffset = 0;
         let isAudioEnabled = true;
+        let chineseVoices = [];
+
+        // Nạp danh sách giọng đọc từ trình duyệt
+        function loadVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            chineseVoices = voices.filter(v => v.lang.toLowerCase().includes('zh') || v.lang.toLowerCase().includes('cmn') || v.lang.toLowerCase().includes('chinese'));
+            
+            const voiceSelect = document.getElementById('voiceSelect');
+            if (!voiceSelect) return;
+            
+            // Giữ lại option mặc định đầu tiên
+            voiceSelect.innerHTML = '<option value="">(Mặc định hệ thống)</option>';
+            
+            chineseVoices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
 
         function fisherYatesShuffle(array) {
             const arr = [...array];
@@ -520,6 +553,16 @@
             speechTimeout = setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-CN';
+                
+                // Gán giọng đọc nếu người dùng chọn trong danh sách
+                const voiceSelectElem = document.getElementById('voiceSelect');
+                if (voiceSelectElem && voiceSelectElem.value !== "") {
+                    const selectedVoice = chineseVoices[parseInt(voiceSelectElem.value)];
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                    }
+                }
+
                 const speedSelectElem = document.getElementById('speedSelect');
                 utterance.rate = speedSelectElem ? parseFloat(speedSelectElem.value) : 1.0;
                 window.speechSynthesis.speak(utterance);
@@ -604,6 +647,7 @@
         }
 
         window.onload = function() {
+            loadVoices();
             const savedData = localStorage.getItem('hsk_vocab_data');
             if (savedData) {
                 try { 
@@ -863,7 +907,6 @@
         }
 
         function handleInputEnter(event, currentIndex, mode) {
-            // Cho phép phím Enter nộp bài và chuyển câu bình thường trên cả máy tính lẫn điện thoại
             if (event.key === 'Enter' || event.keyCode === 13) {
                 event.preventDefault();
                 
@@ -959,7 +1002,7 @@
 
             if (isCorrect) {
                 if (tr) tr.className = 'row-correct';
-                if (mode !== 'listening_mode') speakTest(item.chinese);
+                if (mode !== 'listening_mode') speakText(item.chinese);
                 removeWrongWord(item);
             } else {
                 if (tr) tr.className = 'row-wrong';
