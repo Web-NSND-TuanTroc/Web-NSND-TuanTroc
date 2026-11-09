@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HSK Vocabulary Master — Luyện Gõ Pinyin & Từ Vựng Tiếng Trung</title>
-    <!-- Import Font Inter hiện đại -->
+    <!-- Import Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Thư viện đọc file Excel SheetJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -264,21 +264,26 @@
         td.col-pinyin { color: #4b5563; font-weight: 500; }
         td.col-viet { color: #1f2937; font-weight: 500; }
 
-        .col-input input[type="text"] { 
+        /* NÂNG CẤP: Chuyển ô input thành textarea tự động mở rộng và hỗ trợ xuống dòng/hiển thị rõ chữ dài */
+        .col-input textarea { 
             width: 100%;
-            height: 38px;
-            padding: 6px 10px;
+            min-height: 42px;
+            max-height: 120px;
+            padding: 8px 10px;
             border: 1.5px solid #d1d5db;
             border-radius: 8px;
-            text-align: center;
+            text-align: left;
             font-size: 0.92rem;
             font-family: inherit;
             display: block;
             background-color: #fafafa;
             transition: all 0.2s;
+            resize: vertical;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .col-input input[type="text"]:focus {
+        .col-input textarea:focus {
             border-color: var(--primary-color);
             background-color: #fff;
             box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.15);
@@ -331,10 +336,10 @@
             td.col-pinyin { font-size: 0.82rem; }
             td.col-viet { font-size: 0.85rem; }
             
-            .col-input input[type="text"] { 
-                padding: 6px 4px; 
+            .col-input textarea { 
+                padding: 6px 6px; 
                 font-size: 16px !important;
-                height: 36px;
+                min-height: 40px;
             }
             .audio-btn { font-size: 0.9rem; padding: 1px 2px; }
         }
@@ -362,9 +367,10 @@
 
             <div class="control-group">
                 <label>Kiểu trộn:</label>
+                <!-- ĐÃ SỬA: Mặc định chọn Tuần tự (sequential) khi khởi động -->
                 <select id="shuffleSelect">
+                    <option value="sequential" selected>Tuần tự</option>
                     <option value="random">Ngẫu nhiên</option>
-                    <option value="sequential">Tuần tự</option>
                 </select>
             </div>
 
@@ -731,7 +737,7 @@
             let toIdx = parseInt(document.getElementById('rangeTo').value) || fullVocabData.length;
             const size = parseInt(document.getElementById('quizSize').value) || 10;
             const shuffleSelectElem = document.getElementById('shuffleSelect');
-            const shuffleMode = shuffleSelectElem ? shuffleSelectElem.value : 'random';
+            const shuffleMode = shuffleSelectElem ? shuffleSelectElem.value : 'sequential';
 
             if (fromIdx < 1) fromIdx = 1;
             if (toIdx > fullVocabData.length) toIdx = fullVocabData.length;
@@ -828,11 +834,11 @@
                     <td id="pinyin_${index}" class="col-pinyin">${displayPinyin}</td>
                     <td id="meaning_${index}" class="col-viet">${displayMeaning}</td>
                     <td class="col-input">
-                        <input type="text" id="input_${index}" 
+                        <textarea id="input_${index}" 
                                 enterkeyhint="next" 
                                 autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
                                 oninput="checkAndStartTimer();"
-                                onkeydown="handleInputEnter(event, ${index}, '${mode}')">
+                                onkeydown="handleInputEnter(event, ${index}, '${mode}')"></textarea>
                     </td>
                 `;
 
@@ -858,23 +864,30 @@
         }
 
         function handleInputEnter(event, currentIndex, mode) {
-            if (event.key === 'Enter' || event.keyCode === 13) {
+            // Trên máy tính/điện thoại dùng textarea, khi bấm Enter sẽ xuống dòng. 
+            // Nếu muốn bấm Enter để chấm điểm và chuyển câu, ta dùng tổ hợp Ctrl + Enter hoặc giữ nguyên tùy bạn. 
+            // Ở đây mình để: Bấm Enter bình thường sẽ xuống dòng, còn khi bạn gõ xong muốn nộp bài có thể bấm nút tiếp theo hoặc dùng phím tắt. 
+            // Tuy nhiên nếu bạn vẫn muốn bấm Enter là nộp bài luôn như cũ thì báo mình điều chỉnh lại nhé!
+            if (event.ctrlKey && event.key === 'Enter') {
                 event.preventDefault();
-                
-                try {
-                    checkAnswer(currentIndex);
-                } catch (e) {
-                    console.error("Lỗi khi chấm điểm:", e);
-                }
+                submitAnswerAndNext(currentIndex, mode);
+            }
+        }
 
-                const nextIndex = currentIndex + 1;
-                const nextInput = document.getElementById(`input_${nextIndex}`);
-                if (nextInput) {
-                    nextInput.focus();
-                    nextInput.select();
-                    if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
-                        speakText(currentQuizData[nextIndex].chinese);
-                    }
+        function submitAnswerAndNext(currentIndex, mode) {
+            try {
+                checkAnswer(currentIndex);
+            } catch (e) {
+                console.error("Lỗi khi chấm điểm:", e);
+            }
+
+            const nextIndex = currentIndex + 1;
+            const nextInput = document.getElementById(`input_${nextIndex}`);
+            if (nextInput) {
+                nextInput.focus();
+                nextInput.select();
+                if (mode === 'listening_mode' && currentQuizData[nextIndex]) {
+                    speakText(currentQuizData[nextIndex].chinese);
                 }
             }
         }
